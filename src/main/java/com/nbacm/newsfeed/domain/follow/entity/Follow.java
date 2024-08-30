@@ -1,24 +1,23 @@
-package com.nbacm.newsfeed.entity;
+package com.nbacm.newsfeed.domain.follow.entity;
 
+import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Entity
-@NoArgsConstructor
 @Getter
-public class Feed {
+@NoArgsConstructor
+public class Follow {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long feedId;
+    private Long followerId;
 
-    private String content;
-
-    private int likesCount;
+    private Long followeeId;
 
     @ManyToOne
     private User user;
+
+
 
 }

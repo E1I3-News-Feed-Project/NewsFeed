@@ -1,4 +1,4 @@
-package com.nbacm.newsfeed.entity;
+package com.nbacm.newsfeed.domain.feed.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -7,16 +7,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Follower {
-
+public class Image {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long followerId;
+    private Long imageId;
 
-    private Long followeeId;
+    private String imageName;
 
     @ManyToOne
-    private User user;
-
-
+    private Feed feed;
 
 }

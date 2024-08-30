@@ -1,4 +1,4 @@
-package com.nbacm.newsfeed.entity;
+package com.nbacm.newsfeed.domain.user.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

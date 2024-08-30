@@ -1,5 +1,8 @@
-package com.nbacm.newsfeed.entity;
+package com.nbacm.newsfeed.domain.comment.entity;
 
+import com.nbacm.newsfeed.domain.feed.entity.Feed;
+import com.nbacm.newsfeed.domain.time.entity.BaseTime;
+import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Getter
-public class Comment {
+public class Comment extends BaseTime {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId;
