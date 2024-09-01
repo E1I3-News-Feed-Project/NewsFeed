@@ -55,12 +55,6 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    // 사용자 역할을 JWT 토큰에서 추출하는 메서드
-    public String getUserRoleFromToken(String token) {
-        // JWT 토큰을 파싱하여 Claims 객체를 얻음
-        Claims claims = parseClaims(token);
-        return claims.get(AUTHORIZATION_KEY, String.class);
-    }
 
     public boolean validateToken(String token) {
         try {

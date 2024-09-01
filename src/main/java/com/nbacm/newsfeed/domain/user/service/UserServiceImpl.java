@@ -10,16 +10,15 @@ import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -91,7 +90,25 @@ public class UserServiceImpl implements UserService{
         Files.copy(profile_image.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
         // 저장된 파일 경로를 문자열로 반환
-        return PasswordUtils.hashPassword(targetLocation.toString());
+        return targetLocation.toString();
     }
+
+    @Override
+    public Resource loadProfileImage(String email) throws IOException {
+        User user = userRepository.findByEmail(email).orElseThrow(() ->new NotMatchException("올바른 접근이 아닌 계정입니다."));
+        String imagePath = user.getProfile_image();
+        if (imagePath == null || imagePath.isEmpty()) {
+            throw new NoSuchFileException("이미지를 찾을수 없습니다.");
+        }
+        Path filePath = Paths.get(imagePath);
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (resource.exists() || resource.isReadable()) {
+            return resource;
+        } else {
+            throw new NoSuchFileException("파일을 읽을수 없습니다");
+        }
+    }
+
 }
 
