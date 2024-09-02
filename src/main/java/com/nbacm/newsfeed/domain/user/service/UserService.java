@@ -1,5 +1,6 @@
 package com.nbacm.newsfeed.domain.user.service;
 
+import com.nbacm.newsfeed.domain.user.dto.request.DeleteAccountRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserLoginRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
@@ -21,5 +22,11 @@ public interface UserService {
     UserResponseDto updateUser(String email,UserRequestDto userRequestDto,MultipartFile profileImage) throws IOException;
 
     void deleteExistingProfileImage(User user);
+
+    String logout(String accessToken);
+
+    void deleteAccount(String email, String password);
+
+    void deleteOldAccounts();
 
 }

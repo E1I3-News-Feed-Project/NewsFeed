@@ -1,5 +1,6 @@
 package com.nbacm.newsfeed.domain.user.controller;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nbacm.newsfeed.domain.user.common.utils.JwtUtils;
+import com.nbacm.newsfeed.domain.user.dto.request.DeleteAccountRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserLoginRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,9 +21,9 @@ import java.io.IOException;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
-
 public class UserController {
     private final UserServiceImpl userService;
+    private final JwtUtils jwtUtils;
 
     @PostMapping
     public ResponseEntity<UserResponseDto> signupUser(@Valid @ModelAttribute UserRequestDto userRequestDto,
@@ -45,9 +45,6 @@ public class UserController {
     @GetMapping(value = "/profile")
     public ResponseEntity<Resource> getProfileImage(HttpServletRequest request) {
         String email = (String) request.getAttribute("AuthenticatedUser"); // 인증된 사용자 이메일 가져오기
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
         try {
             Resource file = userService.loadProfileImage(email);
             return ResponseEntity.ok()
@@ -58,15 +55,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
     @PutMapping(value = "/update")
     public ResponseEntity<UserResponseDto> update(@ModelAttribute UserRequestDto userRequestDto,
                                                   @RequestPart(value = "profile_image", required = false) MultipartFile profileImage,
                                                   HttpServletRequest request) {
         try {
             String email = (String) request.getAttribute("AuthenticatedUser");
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
             UserResponseDto updatedUser = userService.updateUser(email, userRequestDto, profileImage);
             return ResponseEntity.ok()
                     .body(updatedUser);
@@ -76,6 +71,22 @@ public class UserController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
+        String expiredToken = userService.logout(token.replace(JwtUtils.BEARER_PREFIX, ""));
+        return ResponseEntity.ok()
+                .header(JwtUtils.AUTHORIZATION_HEADER, JwtUtils.BEARER_PREFIX + expiredToken)
+                .body("로그아웃 되었습니다.");
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteAccount(@RequestBody DeleteAccountRequestDto deleteAccountRequestDto,
+                                                HttpServletRequest request) {
+        String email = (String) request.getAttribute("AuthenticatedUser");
+        userService.deleteAccount(email, deleteAccountRequestDto.getPassword());
+        return ResponseEntity.ok("계정이 성공적으로 삭제되었습니다.");
     }
 
 

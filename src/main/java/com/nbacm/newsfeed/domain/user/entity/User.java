@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -28,12 +31,16 @@ public class User {
 
     private String profile_image;
 
+    private boolean isDeleted = false;
+
+    private LocalDateTime deletedAt;
 
     @Builder
-    public User(String email, String password, String nickName, String profile_image) {
+    public User(Long userId, String email, String password, String nickname, String profile_image) {
+        this.userId = userId;
         this.email = email;
         this.password = password;
-        this.nickname = nickName;
+        this.nickname = nickname;
         this.profile_image = profile_image;
     }
 
@@ -41,6 +48,10 @@ public class User {
         if (password != null) this.password = password;
         if (nickname != null) this.nickname = nickname;
         if (profile_image != null) this.profile_image = profile_image;
+    }
+    public void deleteAccount(){
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
     }
 
 

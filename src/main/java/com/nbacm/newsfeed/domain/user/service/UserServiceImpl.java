@@ -2,16 +2,22 @@ package com.nbacm.newsfeed.domain.user.service;
 
 import com.nbacm.newsfeed.domain.user.common.utils.JwtUtils;
 import com.nbacm.newsfeed.domain.user.common.utils.PasswordUtils;
+import com.nbacm.newsfeed.domain.user.dto.request.DeleteAccountRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserLoginRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
 import com.nbacm.newsfeed.domain.user.entity.User;
+import com.nbacm.newsfeed.domain.user.exception.AlreadyDeletedException;
+import com.nbacm.newsfeed.domain.user.exception.EmailAlreadyExistsException;
+import com.nbacm.newsfeed.domain.user.exception.InvalidPasswordException;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -19,7 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -28,6 +38,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Value("${profile.image.base.dir}")
     private String baseDirectory;
@@ -39,7 +50,7 @@ public class UserServiceImpl implements UserService {
         String password = PasswordUtils.hashPassword(userRequestDto.getPassword());
 
         if (userRepository.findByEmail(userRequestDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("사용중인 이메일 입니다.");
+            throw new EmailAlreadyExistsException("사용중인 이메일 입니다.");
         }
         // 프로필 이미지가 있을 경우 먼저 저장하여 이미지 경로를 얻음
         String imagePath = null;
@@ -50,7 +61,7 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .email(userRequestDto.getEmail())
                 .password(PasswordUtils.hashPassword(userRequestDto.getPassword()))
-                .nickName(userRequestDto.getNickname())
+                .nickname(userRequestDto.getNickname())
                 .profile_image(imagePath) // 저장된 프로필 이미지 경로를 포함
                 .build();
 
@@ -63,12 +74,78 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String login(UserLoginRequestDto userLoginRequestDto) {
-        User user = userRepository.findByEmail(userLoginRequestDto.getEmail())
-                .orElseThrow(() -> new NotMatchException("이메일이 일치 하지 않습니다."));
+        User user = userRepository.finByEmailOrElseThrow(userLoginRequestDto.getEmail());
         if (!PasswordUtils.checkPassword(userLoginRequestDto.getPassword(), user.getPassword())) {
             throw new NotMatchException("잘못된 비밀번호 입니다.");
         }
-        return jwtUtils.generateToken(user.getEmail());
+        if(user.isDeleted()){
+            throw new AlreadyDeletedException("탈퇴한 계정입니다");
+        }
+        String accessToken = jwtUtils.generateToken(user.getEmail());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getEmail());
+        // Redis에 RefreshToken 저장
+        redisTemplate.opsForValue().set(
+                "RT:" + user.getEmail(),
+                refreshToken,
+                jwtUtils.getRefreshTokenExpirationTime(),
+                TimeUnit.MILLISECONDS
+        );
+        return accessToken;
+    }
+
+    @Override
+    public String logout(String accessToken) {
+        String email = jwtUtils.getUserEmailFromToken(accessToken);
+        // RefreshToken 삭제
+        redisTemplate.delete("RT:" + email);
+        return null;
+    }
+    @Override
+    @Transactional
+    public UserResponseDto updateUser(String email,UserRequestDto userRequestDto,MultipartFile profileImage) throws IOException {
+        User user = userRepository.finByEmailOrElseThrow(email);
+
+        String newPassword = null;
+        if (userRequestDto.getPassword() != null) {
+            newPassword = PasswordUtils.hashPassword(userRequestDto.getPassword());
+        }
+
+        String newProfileImagePath = null;
+        if (profileImage != null && !profileImage.isEmpty()) {
+            deleteExistingProfileImage(user);
+            newProfileImagePath = saveProfileImage(profileImage, user.getEmail());
+        }
+
+        user.update(newPassword, userRequestDto.getNickname(), newProfileImagePath);
+        userRepository.save(user);
+
+        return UserResponseDto.from(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccount(String email, String password) {
+        User user = userRepository.finByEmailOrElseThrow(email);
+        if(!PasswordUtils.checkPassword(password, user.getPassword())){
+            throw new InvalidPasswordException("올바르지 않은 비밀번호 입니다.");
+        }
+        user.deleteAccount();
+        userRepository.save(user);
+        redisTemplate.delete("RT:" + user.getEmail());
+    }
+
+    @Scheduled(cron = "0 0 001 * * ?") // 매일 새벽 1시에 실행
+    @Override
+    @Transactional
+    public void deleteOldAccounts() {
+        LocalDateTime tenDaysAgo = LocalDateTime.now().minusDays(1);
+        List<User> userToDelete = userRepository.findUsersDeletedBefore(tenDaysAgo);
+
+        List<Long> userIds = userToDelete.stream().map(User::getUserId).toList();
+
+        // 데이터베이스에서 사용자 삭제
+        userRepository.deleteByUserIdIn(userIds);
+
     }
 
     @Override
@@ -95,7 +172,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Resource loadProfileImage(String email) throws IOException {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotMatchException("올바른 접근이 아닌 계정입니다."));
+        User user = userRepository.finByEmailOrElseThrow(email);
         String imagePath = user.getProfile_image();
         if (imagePath == null || imagePath.isEmpty()) {
             throw new NoSuchFileException("이미지를 찾을수 없습니다.");
@@ -109,30 +186,6 @@ public class UserServiceImpl implements UserService {
             throw new NoSuchFileException("파일을 읽을수 없습니다");
         }
     }
-
-    @Override
-    @Transactional
-    public UserResponseDto updateUser(String email,UserRequestDto userRequestDto,MultipartFile profileImage) throws IOException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotMatchException("사용자를 찾을 수 없습니다."));
-
-        String newPassword = null;
-        if (userRequestDto.getPassword() != null) {
-            newPassword = PasswordUtils.hashPassword(userRequestDto.getPassword());
-        }
-
-        String newProfileImagePath = null;
-        if (profileImage != null && !profileImage.isEmpty()) {
-            deleteExistingProfileImage(user);
-            newProfileImagePath = saveProfileImage(profileImage, user.getEmail());
-        }
-
-        user.update(newPassword, userRequestDto.getNickname(), newProfileImagePath);
-        userRepository.save(user);
-
-        return UserResponseDto.from(user);
-    }
-
 
     @Override
     public void deleteExistingProfileImage(User user) {
