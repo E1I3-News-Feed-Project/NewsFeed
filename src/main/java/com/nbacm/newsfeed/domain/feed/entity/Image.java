@@ -20,8 +20,9 @@ public class Image {
     @JoinColumn(name = "feed_id")
     private Feed feed;
 
-    public Image(String imageName) {
+    public Image(String imageName, Feed feed) {
         this.imageName = imageName;
+        this.feed = feed;
     }
 
     // 파일 이름을 반환하는 메서드

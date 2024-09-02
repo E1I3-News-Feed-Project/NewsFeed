@@ -54,8 +54,8 @@ public class FeedServiceImpl implements FeedService {
             for (MultipartFile imageFile : requestDto.getImages()) {
                 if (!imageFile.isEmpty()) {
                     String newFilename = saveImage(imageFile, user.getEmail());
-                    Image image = new Image(newFilename);
-                    image.setFeed(savedFeed);
+                    Image image = new Image(newFilename, feed);
+//                    image.setFeed(savedFeed); // 생성 buil
                     images.add(image);
                 }
             }
@@ -69,75 +69,105 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public Optional<FeedResponseDto> getFeedById(Long feed_id, String email) {
-        return feedRepository.findById(feed_id)
+    public Optional<FeedResponseDto> getFeedById(Long feedId, String email) {
+        return feedRepository.findById(feedId)
                 .filter(feed -> feed.getAuthor().getEmail().equals(email)) // 작성자 확인
-                .map(this::convertToFeedResponseDto);
+                .map(FeedResponseDto::from);
     }
 
     public Page<FeedResponseDto> findFeedsByUser(String email, Pageable pageable) {
         Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
-        return feeds.map(this::convertToFeedResponseDto);
+        return feeds.map(FeedResponseDto::from);
     }
 
 
     @Override
     @Transactional
-    public FeedResponseDto updateFeed(Long feed_id, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException {
+    public FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotMatchException("사용자를 찾을 수 없습니다."));
 
-        Feed feed = feedRepository.findById(feed_id)
+        Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new NotMatchException("게시물이 존재하지 않습니다."));
 
         if (!feed.getAuthor().getEmail().equals(email)) {
             throw new NotMatchException("작성자만 게시물을 수정할 수 있습니다.");
         }
 
+        // 게시물 내용 업데이트
         feed.setContent(feedRequestDto.getContent());
 
+        // 이미지 업데이트
         if (images != null) {
-            // 삭제할 기존 이미지를 처리합니다.
+            // 기존 이미지 파일 및 데이터베이스 엔티티 삭제
             List<Image> existingImages = new ArrayList<>(feed.getImages());
             feed.getImages().clear();
 
-            // 새로운 이미지를 처리합니다.
+            for (Image image : existingImages) {
+                String imagePath = image.getImageName();
+                if (imagePath != null && !imagePath.isEmpty()) {
+                    try {
+                        Path fileToDeletePath = Paths.get(imagePath);
+                        Files.deleteIfExists(fileToDeletePath);
+                    } catch (IOException e) {
+                        System.err.println("이미지 삭제 중 오류 발생: " + e.getMessage());
+                    }
+                }
+            }
+
+            // 기존 이미지 엔티티 삭제
+            imageRepository.deleteAll(existingImages);
+
+            // 새로운 이미지 처리 및 저장
             List<Image> newImages = new ArrayList<>();
             for (MultipartFile imageFile : images) {
                 if (!imageFile.isEmpty()) {
                     String newFilename = saveImage(imageFile, user.getEmail());
-                    Image image = new Image(newFilename);
-                    image.setFeed(feed);
+                    Image image = new Image(newFilename, feed);
                     newImages.add(image);
                 }
             }
 
-            // 기존 이미지 삭제
-            imageRepository.deleteAll(existingImages);
-            // 새로운 이미지를 저장
             if (!newImages.isEmpty()) {
                 imageRepository.saveAll(newImages);
                 feed.getImages().addAll(newImages);  // 새로운 이미지 추가
             }
         }
 
-        // 엔티티 저장
-        feedRepository.save(feed);
-        return convertToFeedResponseDto(feed);
+        // 게시물 엔티티 저장
+        Feed updatedFeed = feedRepository.save(feed);
+        return FeedResponseDto.from(updatedFeed);
     }
 
     @Override
     @Transactional
-    public boolean deleteFeed(Long feed_id, String email) {
-        Feed feed = feedRepository.findById(feed_id)
+    public boolean deleteFeed(Long feedId, String email) {
+        Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
 
         if (!feed.getAuthor().getEmail().equals(email)) {
             throw new IllegalArgumentException("작성자만 게시물을 삭제할 수 있습니다.");
         }
 
-        feedRepository.deleteById(feed_id);
-        imageRepository.deleteByFeedId(feed_id);
+        // 1. 이미지 파일 삭제
+        List<Image> images = feed.getImages();
+        for (Image image : images) {
+            String imagePath = image.getImageName(); // 이미지 파일 경로
+            Path fileToDeletePath = Paths.get(imagePath);
+            try {
+                if (Files.exists(fileToDeletePath)) {
+                    Files.delete(fileToDeletePath);
+                    System.out.println("파일 삭제 성공: " + fileToDeletePath);
+                } else {
+                    System.out.println("파일이 존재하지 않음: " + fileToDeletePath);
+                }
+            } catch (IOException e) {
+                System.err.println("이미지 삭제 중 오류 발생: " + e.getMessage());
+            }
+        }
+
+        feedRepository.deleteById(feedId);
+        imageRepository.deleteByFeedId(feedId);
         return true;
     }
 
@@ -154,20 +184,6 @@ public class FeedServiceImpl implements FeedService {
 
         Files.copy(imageFile.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-        return fileName;
-    }
-
-    private FeedResponseDto convertToFeedResponseDto(Feed feed) {
-        List<String> imageNames = feed.getImages().stream()
-                .map(Image::getImageName)
-                .collect(Collectors.toList());
-
-        return new FeedResponseDto(
-                feed.getFeedId(),
-                feed.getContent(),
-                imageNames,
-                feed.getAuthor().getEmail(),
-                feed.getLikesCount()
-        );
+        return targetLocation.toString();
     }
 }

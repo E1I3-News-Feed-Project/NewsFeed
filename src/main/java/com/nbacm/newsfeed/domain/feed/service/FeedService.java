@@ -13,11 +13,11 @@ import java.util.Optional;
 public interface FeedService {
     void createFeed(FeedRequestDto requestDto) throws IOException;
 
-    Optional<FeedResponseDto> getFeedById(Long feed_id, String email);
+    Optional<FeedResponseDto> getFeedById(Long feedId, String email);
 
-    boolean deleteFeed(Long feed_id, String email);
+    boolean deleteFeed(Long feedId, String email);
 
     Page<FeedResponseDto> findFeedsByUser(String email, Pageable pageable);
 
-    FeedResponseDto updateFeed(Long feed_id, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException;
+    FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException;
 }

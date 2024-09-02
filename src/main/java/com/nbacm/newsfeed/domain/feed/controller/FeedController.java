@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,18 +35,11 @@ public class FeedController {
             @RequestParam(required = false) List<MultipartFile> images,
             HttpServletRequest request) {
 
-        String token = extractToken(request);
-
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("JWT 토큰이 누락되었습니다.");
-        }
-
         try {
-            if (!jwtUtils.validateToken(token)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+            String email = (String) request.getAttribute("AuthenticatedUser");
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
             }
-
-            String email = jwtUtils.getUserEmailFromToken(token);
             FeedRequestDto requestDto = new FeedRequestDto(content, images, email);
 
             feedService.createFeed(requestDto);
@@ -55,20 +49,16 @@ public class FeedController {
         }
     }
 
-    @GetMapping("/{feed_id}")
-    public ResponseEntity<FeedResponseDto> getFeedById(@PathVariable Long feed_id, HttpServletRequest request) {
-        String token = extractToken(request);
+    @GetMapping("/{feedId}")
+    public ResponseEntity<?> getFeedById(@PathVariable Long feedId, HttpServletRequest request) {
 
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // JWT 토큰이 누락되었습니다.
+        String email = (String) request.getAttribute("AuthenticatedUser");
+
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
         }
 
-        if (!jwtUtils.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // 유효하지 않은 토큰입니다.
-        }
-
-        String email = jwtUtils.getUserEmailFromToken(token);
-        Optional<FeedResponseDto> feedResponse = feedService.getFeedById(feed_id, email);
+        Optional<FeedResponseDto> feedResponse = feedService.getFeedById(feedId, email);
 
         return feedResponse
                 .map(ResponseEntity::ok)
@@ -76,31 +66,25 @@ public class FeedController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<FeedResponseDto>> getAllFeeds(
-            @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<?> getAllFeeds(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
 
-        String token = extractToken(request);
-
-        if (token == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // JWT 토큰 누락
+        String email = (String) request.getAttribute("AuthenticatedUser");
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("사용자 인증 정보가 없습니다.");
         }
 
-        if (!jwtUtils.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // 유효하지 않은 토큰
-        }
-
-        String email = jwtUtils.getUserEmailFromToken(token);
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<FeedResponseDto> feedPage = feedService.findFeedsByUser(email, pageable);
         return ResponseEntity.ok(feedPage);
     }
 
-    @PutMapping(value = "/{feed_id}")
+    @PutMapping(value = "/{feedId}")
     public ResponseEntity<String> updateFeed(
-            @PathVariable Long feed_id,
+            @PathVariable Long feedId,
             @ModelAttribute FeedRequestDto feedRequestDto,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             HttpServletRequest request) {
@@ -115,7 +99,7 @@ public class FeedController {
             feedRequestDto.setEmail(email);
 
             // FeedService 호출
-            FeedResponseDto updated = feedService.updateFeed(feed_id, feedRequestDto, images, email);
+            FeedResponseDto updated = feedService.updateFeed(feedId, feedRequestDto, images, email);
             return ResponseEntity.ok("게시물을 업데이트했습니다.");
 
         } catch (NotMatchException e) {
@@ -125,8 +109,8 @@ public class FeedController {
         }
     }
 
-    @DeleteMapping("/{feed_id}")
-    public ResponseEntity<String> deleteFeed(@PathVariable Long feed_id, HttpServletRequest request) {
+    @DeleteMapping("/{feedId}")
+    public ResponseEntity<String> deleteFeed(@PathVariable Long feedId, HttpServletRequest request) {
         try {
             // 인증된 사용자 이메일 추출
             String email = (String) request.getAttribute("AuthenticatedUser");
@@ -135,7 +119,7 @@ public class FeedController {
             }
 
             // Feed 삭제 서비스 호출
-            boolean deleted = feedService.deleteFeed(feed_id, email);
+            boolean deleted = feedService.deleteFeed(feedId, email);
             return deleted ? ResponseEntity.ok("게시물이 성공적으로 삭제되었습니다.") :
                     ResponseEntity.status(HttpStatus.NOT_FOUND).body("게시물을 찾을 수 없습니다.");
 
@@ -143,13 +127,5 @@ public class FeedController {
             // 일반적인 예외 처리
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시물 삭제 실패.");
         }
-    }
-
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader(JwtUtils.AUTHORIZATION_HEADER);
-        if (header != null && header.startsWith(JwtUtils.BEARER_PREFIX)) {
-            return header.substring(JwtUtils.BEARER_PREFIX.length());
-        }
-        return null;
     }
 }
