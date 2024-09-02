@@ -37,9 +37,6 @@ public class FeedController {
 
         try {
             String email = (String) request.getAttribute("AuthenticatedUser");
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
-            }
             FeedRequestDto requestDto = new FeedRequestDto(content, images, email);
 
             feedService.createFeed(requestDto);
@@ -53,10 +50,6 @@ public class FeedController {
     public ResponseEntity<?> getFeedById(@PathVariable Long feedId, HttpServletRequest request) {
 
         String email = (String) request.getAttribute("AuthenticatedUser");
-
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
-        }
 
         Optional<FeedResponseDto> feedResponse = feedService.getFeedById(feedId, email);
 
@@ -72,10 +65,6 @@ public class FeedController {
             HttpServletRequest request) {
 
         String email = (String) request.getAttribute("AuthenticatedUser");
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("사용자 인증 정보가 없습니다.");
-        }
 
         Pageable pageable = PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<FeedResponseDto> feedPage = feedService.findFeedsByUser(email, pageable);
@@ -91,15 +80,16 @@ public class FeedController {
 
         try {
             String email = (String) request.getAttribute("AuthenticatedUser");
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
-            }
 
             // 이메일을 DTO에 설정
-            feedRequestDto.setEmail(email);
+            FeedRequestDto dtoWithEmail = new FeedRequestDto(
+                    feedRequestDto.getContent(),
+                    images,
+                    email // 이메일을 생성자로 설정
+            );
 
             // FeedService 호출
-            FeedResponseDto updated = feedService.updateFeed(feedId, feedRequestDto, images, email);
+            FeedResponseDto updated = feedService.updateFeed(feedId, dtoWithEmail, images, email);
             return ResponseEntity.ok("게시물을 업데이트했습니다.");
 
         } catch (NotMatchException e) {
@@ -114,9 +104,6 @@ public class FeedController {
         try {
             // 인증된 사용자 이메일 추출
             String email = (String) request.getAttribute("AuthenticatedUser");
-            if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("사용자 인증 정보가 없습니다.");
-            }
 
             // Feed 삭제 서비스 호출
             boolean deleted = feedService.deleteFeed(feedId, email);
