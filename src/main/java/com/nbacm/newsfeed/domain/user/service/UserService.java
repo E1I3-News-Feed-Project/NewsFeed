@@ -18,4 +18,8 @@ public interface UserService {
 
     Resource loadProfileImage(String email) throws IOException;
 
+    UserResponseDto updateUser(String email,UserRequestDto userRequestDto,MultipartFile profileImage) throws IOException;
+
+    void deleteExistingProfileImage(User user);
+
 }

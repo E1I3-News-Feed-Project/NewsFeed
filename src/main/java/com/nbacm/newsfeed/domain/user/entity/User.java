@@ -37,5 +37,11 @@ public class User {
         this.profile_image = profile_image;
     }
 
+    public void update(String password, String nickname, String profile_image) {
+        if (password != null) this.password = password;
+        if (nickname != null) this.nickname = nickname;
+        if (profile_image != null) this.profile_image = profile_image;
+    }
+
 
 }

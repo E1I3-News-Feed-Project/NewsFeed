@@ -7,12 +7,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private JwtUtils jwtUtils;
@@ -28,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith(JwtUtils.BEARER_PREFIX)) {
             String token = authHeader.substring(JwtUtils.BEARER_PREFIX.length());
+            log.info("token : {}", token);
             try {
                 if (jwtUtils.validateToken(token)) {
                     String email = jwtUtils.getUserEmailFromToken(token);// 요청 메서드가 PUT 또는 DELETE일 때만 자신의 이메일 확인
