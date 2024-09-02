@@ -55,17 +55,17 @@ public class FeedServiceImpl implements FeedService {
                 if (!imageFile.isEmpty()) {
                     String newFilename = saveImage(imageFile, user.getEmail());
                     Image image = new Image(newFilename, feed);
-//                    image.setFeed(savedFeed); // 생성 buil
                     images.add(image);
                 }
             }
 
             if (!images.isEmpty()) {
                 imageRepository.saveAll(images);
-                savedFeed.setImages(images);
-                feedRepository.save(savedFeed);
+                savedFeed.updateImages(images);
+//                feedRepository.save(savedFeed);
             }
         }
+        feedRepository.save(savedFeed);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class FeedServiceImpl implements FeedService {
         }
 
         // 게시물 내용 업데이트
-        feed.setContent(feedRequestDto.getContent());
+        feed.updateContent(feedRequestDto.getContent());
 
         // 이미지 업데이트
         if (images != null) {
