@@ -3,17 +3,29 @@ package com.nbacm.newsfeed.domain.feed.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 public class Image {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long imageId;
 
     private String imageName;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "feed_id")
     private Feed feed;
 
+    public Image(String imageName) {
+        this.imageName = imageName;
+    }
+
+    // 파일 이름을 반환하는 메서드
+    public String getImageName() {
+        return imageName;
+    }
 }
