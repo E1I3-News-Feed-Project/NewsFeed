@@ -1,7 +1,5 @@
 package com.nbacm.newsfeed.domain.user.dto.request;
 
-import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
-import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.Getter;
