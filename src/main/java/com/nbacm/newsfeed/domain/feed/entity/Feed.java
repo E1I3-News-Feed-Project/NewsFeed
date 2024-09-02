@@ -50,4 +50,13 @@ public class Feed extends BaseTime {
     public User getAuthor() {
         return this.user;
     }
+
+    public void updateImages(List<Image> newImages) {
+        this.images.clear();
+        this.images.addAll(newImages);
+    }
+
+    public void updateContent(String newContent) {
+        this.content = newContent;
+    }
 }
