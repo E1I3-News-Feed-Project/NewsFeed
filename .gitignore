@@ -175,4 +175,14 @@ $RECYCLE.BIN/
 *.lnk
 
 application.yml
+user-profile-images
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,java,windows,macos
+
+### Gradle ###
+.gradle
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+

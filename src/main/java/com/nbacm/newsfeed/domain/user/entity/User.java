@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,14 +21,27 @@ public class User {
     private String email;
 
     @NotNull
-    @Pattern(regexp = "(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,16}",
-            message = "비밀번호는 8~16자 영문 소문자, 숫자, 특수문자를 포함 하여야 합니다.")
     private String password;
 
     @NotNull
-    private String nickName;
+    private String nickname;
 
     private String profile_image;
+
+
+    @Builder
+    public User(String email, String password, String nickName, String profile_image) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickName;
+        this.profile_image = profile_image;
+    }
+
+    public void update(String password, String nickname, String profile_image) {
+        if (password != null) this.password = password;
+        if (nickname != null) this.nickname = nickname;
+        if (profile_image != null) this.profile_image = profile_image;
+    }
 
 
 }
