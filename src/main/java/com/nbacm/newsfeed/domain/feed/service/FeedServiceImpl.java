@@ -43,28 +43,33 @@ public class FeedServiceImpl implements FeedService {
     @Override
     @Transactional
     public void createFeed(FeedRequestDto requestDto) throws IOException {
+        // 이메일로 사용자 조회
         User user = userRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
 
+        // 새 게시물 생성
         Feed feed = new Feed(requestDto.getContent(), user, 0);
         Feed savedFeed = feedRepository.save(feed);
 
+        // 이미지 처리
         if (requestDto.getImages() != null) {
             List<Image> images = new ArrayList<>();
             for (MultipartFile imageFile : requestDto.getImages()) {
                 if (!imageFile.isEmpty()) {
                     String newFilename = saveImage(imageFile, user.getEmail());
-                    Image image = new Image(newFilename, feed);
+                    Image image = new Image(newFilename, savedFeed); // 저장된 게시물과 연관
                     images.add(image);
                 }
             }
 
+            // 이미지 저장 및 게시물에 추가
             if (!images.isEmpty()) {
                 imageRepository.saveAll(images);
                 savedFeed.updateImages(images);
-//                feedRepository.save(savedFeed);
             }
         }
+
+        // 게시물 저장
         feedRepository.save(savedFeed);
     }
 
