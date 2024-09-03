@@ -2,18 +2,13 @@ package com.nbacm.newsfeed.domain.comment.controller;
 
 import com.nbacm.newsfeed.domain.comment.dto.request.CommentRequestDto;
 import com.nbacm.newsfeed.domain.comment.dto.response.CommentResponseDto;
-import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.comment.repository.CommentRepository;
-import com.nbacm.newsfeed.domain.comment.service.CommentService;
-import com.nbacm.newsfeed.domain.feed.entity.Feed;
+import com.nbacm.newsfeed.domain.comment.service.CommentServiceImpl;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
-import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,10 +17,11 @@ import java.util.List;
 @RequestMapping("/api/v1/comments")
 @RequiredArgsConstructor
 public class CommentController {
-private final CommentService commentService;
+private final CommentServiceImpl commentService;
     private final FeedRepository feedRepository;
     private final CommentRepository commentRepository;
 
+    //댓글 작성
     @PostMapping("/{feedId}")
     ResponseEntity<CommentResponseDto> createComment(@PathVariable Long feedId,
                                                      HttpServletRequest request,
