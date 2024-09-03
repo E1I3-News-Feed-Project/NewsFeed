@@ -2,9 +2,9 @@ package com.nbacm.newsfeed.domain.user.service;
 
 import com.nbacm.newsfeed.domain.user.common.utils.JwtUtils;
 import com.nbacm.newsfeed.domain.user.common.utils.PasswordUtils;
-import com.nbacm.newsfeed.domain.user.dto.request.DeleteAccountRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserLoginRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
+import com.nbacm.newsfeed.domain.user.dto.response.MyPageUserResponseDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.exception.AlreadyDeletedException;
@@ -13,6 +13,7 @@ import com.nbacm.newsfeed.domain.user.exception.InvalidPasswordException;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -22,18 +23,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -46,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto signUp(UserRequestDto userRequestDto, MultipartFile profile_image) throws IOException {
+    public UserResponseDto signup(UserRequestDto userRequestDto, MultipartFile profileImage) throws IOException {
         String password = PasswordUtils.hashPassword(userRequestDto.getPassword());
 
         if (userRepository.findByEmail(userRequestDto.getEmail()).isPresent()) {
@@ -54,15 +55,15 @@ public class UserServiceImpl implements UserService {
         }
         // 프로필 이미지가 있을 경우 먼저 저장하여 이미지 경로를 얻음
         String imagePath = null;
-        if (profile_image != null && !profile_image.isEmpty()) {
-            imagePath = saveProfileImage(profile_image, userRequestDto.getEmail()); // 사용자 식별자로 이메일 사용
+        if (profileImage != null && !profileImage.isEmpty()) {
+            imagePath = saveProfileImage(profileImage, userRequestDto.getEmail()); // 사용자 식별자로 이메일 사용
         }
         // User 객체를 한 번에 생성하여 저장
         User user = User.builder()
                 .email(userRequestDto.getEmail())
                 .password(PasswordUtils.hashPassword(userRequestDto.getPassword()))
                 .nickname(userRequestDto.getNickname())
-                .profile_image(imagePath) // 저장된 프로필 이미지 경로를 포함
+                .profileImage(imagePath) // 저장된 프로필 이미지 경로를 포함
                 .build();
 
         // DB에 한 번의 insert 쿼리로 저장
@@ -134,6 +135,17 @@ public class UserServiceImpl implements UserService {
         redisTemplate.delete("RT:" + user.getEmail());
     }
 
+    @Override
+    public MyPageUserResponseDto getUser(String email) {
+        User user = userRepository.finByEmailOrElseThrow(email);
+        String imageUrl = null;
+        if(user.getProfileImage() != null && !user.getProfileImage().isEmpty()){
+            Path filePath = Paths.get(baseDirectory, user.getProfileImage());
+            imageUrl = baseDirectory + "/"+email+filePath.getFileName().toString();
+        }
+        return MyPageUserResponseDto.from(user, imageUrl);
+    }
+
     @Scheduled(cron = "0 0 001 * * ?") // 매일 새벽 1시에 실행
     @Override
     @Transactional
@@ -149,7 +161,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String saveProfileImage(MultipartFile profile_image, String email) throws IOException {
+    public String saveProfileImage(MultipartFile profileImage, String email) throws IOException {
         // 사용자별 디렉토리 경로 생성 (ID 사용)
         String userDirectory = baseDirectory + "/" + email;
         Path userPath = Paths.get(userDirectory);
@@ -160,11 +172,11 @@ public class UserServiceImpl implements UserService {
         }
 
         // 고유한 파일 이름 생성
-        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(profile_image.getOriginalFilename());
+        String fileName = UUID.randomUUID() + "_" + StringUtils.cleanPath(Objects.requireNonNull(profileImage.getOriginalFilename()));
         Path targetLocation = userPath.resolve(fileName);
 
         // 파일 저장
-        Files.copy(profile_image.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(profileImage.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
         // 저장된 파일 경로를 문자열로 반환
         return targetLocation.toString();
@@ -173,7 +185,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Resource loadProfileImage(String email) throws IOException {
         User user = userRepository.finByEmailOrElseThrow(email);
-        String imagePath = user.getProfile_image();
+        String imagePath = user.getProfileImage();
         if (imagePath == null || imagePath.isEmpty()) {
             throw new NoSuchFileException("이미지를 찾을수 없습니다.");
         }
@@ -189,7 +201,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteExistingProfileImage(User user) {
-        String existingProfileImage = user.getProfile_image();
+        String existingProfileImage = user.getProfileImage();
         if (existingProfileImage != null && !existingProfileImage.isEmpty()) {
             try {
                 Path fileToDeletePath = Paths.get(existingProfileImage);

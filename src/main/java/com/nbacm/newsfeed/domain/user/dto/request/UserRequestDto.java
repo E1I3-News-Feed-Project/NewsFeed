@@ -19,7 +19,7 @@ public class UserRequestDto {
     )
     private String password;
 
-    private MultipartFile profile_image;
+    private MultipartFile profileImage;
 
 
 

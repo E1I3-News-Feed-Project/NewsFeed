@@ -3,6 +3,7 @@ import com.nbacm.newsfeed.domain.user.common.utils.JwtUtils;
 import com.nbacm.newsfeed.domain.user.dto.request.DeleteAccountRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserLoginRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
+import com.nbacm.newsfeed.domain.user.dto.response.MyPageUserResponseDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import com.nbacm.newsfeed.domain.user.service.UserServiceImpl;
@@ -27,9 +28,9 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> signupUser(@Valid @ModelAttribute UserRequestDto userRequestDto,
-                                                      @RequestParam(value = "profile_image",required = false) MultipartFile profile_image) {
+                                                      @RequestParam(value = "profile_image",required = false) MultipartFile profileImage) {
         try {
-            UserResponseDto user = userService.signUp(userRequestDto, profile_image);
+            UserResponseDto user = userService.signup(userRequestDto, profileImage);
             return ResponseEntity.ok(user);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -56,9 +57,18 @@ public class UserController {
         }
     }
 
-    @PutMapping(value = "/update")
+    @GetMapping("/MyPage")
+    public ResponseEntity<MyPageUserResponseDto> getMyPageUsers(HttpServletRequest request) {
+        String email = (String) request.getAttribute("AuthenticatedUser");
+        MyPageUserResponseDto myPageUserResponseDto =userService.getUser(email);
+        return ResponseEntity.ok()
+
+                .body(myPageUserResponseDto);
+    }
+
+    @PutMapping(value = "/update",produces = "application/json")
     public ResponseEntity<UserResponseDto> update(@ModelAttribute UserRequestDto userRequestDto,
-                                                  @RequestPart(value = "profile_image", required = false) MultipartFile profileImage,
+                                                  @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
                                                   HttpServletRequest request) {
         try {
             String email = (String) request.getAttribute("AuthenticatedUser");
