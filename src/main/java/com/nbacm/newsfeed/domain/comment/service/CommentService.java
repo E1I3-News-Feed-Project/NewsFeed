@@ -10,6 +10,7 @@ import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -46,11 +47,13 @@ public class CommentService {
     }
 
     //코멘트 수정
+    @Transactional
     public CommentResponseDto updateComments(Long commentId, Long feedId, String email, CommentRequestDto commentRequestDto) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("코멘트를 찾을 수 없습니다."));
         Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NullPointerException("피드를 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email).orElseThrow(()-> new NullPointerException("해당 유저를 찾을 수 없습니다"));
         comment.updateComment(commentRequestDto, feed, comment, user);
+        commentRepository.save(comment);
         return new CommentResponseDto(comment);
     }
 
