@@ -16,8 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     return this.findByEmail(email).orElseThrow(() -> new NotMatchException("올바른 계정 접근이 아닙니다"));
   }
 
-  boolean existsByEmail(String email);
-
   @Query("SELECT u FROM User u WHERE u.isDeleted = true AND u.deletedAt < :deletedAt")
   List<User> findUsersDeletedBefore(LocalDateTime deletedAt);
 

@@ -124,6 +124,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public MyPageUserResponseDto getUser(String email) {
+        User user = userRepository.finByEmailOrElseThrow(email);
+        String imageUrl = null;
+        if(user.getProfileImage() != null && !user.getProfileImage().isEmpty()){
+            Path filePath = Paths.get(baseDirectory, user.getProfileImage());
+            imageUrl = baseDirectory + "/"+email+filePath.getFileName().toString();
+        }
+        return MyPageUserResponseDto.from(user, imageUrl);
+    }
+
+    @Override
     @Transactional
     public void deleteAccount(String email, String password) {
         User user = userRepository.finByEmailOrElseThrow(email);
@@ -135,22 +146,12 @@ public class UserServiceImpl implements UserService {
         redisTemplate.delete("RT:" + user.getEmail());
     }
 
-    @Override
-    public MyPageUserResponseDto getUser(String email) {
-        User user = userRepository.finByEmailOrElseThrow(email);
-        String imageUrl = null;
-        if(user.getProfileImage() != null && !user.getProfileImage().isEmpty()){
-            Path filePath = Paths.get(baseDirectory, user.getProfileImage());
-            imageUrl = baseDirectory + "/"+email+filePath.getFileName().toString();
-        }
-        return MyPageUserResponseDto.from(user, imageUrl);
-    }
-
     @Scheduled(cron = "0 0 001 * * ?") // 매일 새벽 1시에 실행
     @Override
     @Transactional
     public void deleteOldAccounts() {
         LocalDateTime tenDaysAgo = LocalDateTime.now().minusDays(1);
+
         List<User> userToDelete = userRepository.findUsersDeletedBefore(tenDaysAgo);
 
         List<Long> userIds = userToDelete.stream().map(User::getUserId).toList();
