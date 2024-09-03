@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://13.124.17.212:3306/newsfeed?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${SPRING_DATASOURCE_NAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: root
+    password: root
   jpa:
     show-sql: true
     hibernate:
@@ -31,6 +31,9 @@ profile:
   image:
     base:
       dir: /Users/kanguk/Desktop/nbcam/NewsFeed/user-profile-images
+
+file:
+  upload-dir: /path/to/upload/images
 
 logging:
   level:
