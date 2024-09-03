@@ -12,4 +12,6 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     void deleteByFollowerUserIdAndFollowingUserId(Long followerId, Long followingId);
 
     List<Follow> findByFollowerUserId(Long followerId);
+
+    List<Follow> findByFollowingUserId(Long followingUserId);
 }

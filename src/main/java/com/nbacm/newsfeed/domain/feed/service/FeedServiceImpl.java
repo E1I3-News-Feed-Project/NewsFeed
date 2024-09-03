@@ -6,6 +6,8 @@ import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.feed.entity.Image;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
 import com.nbacm.newsfeed.domain.feed.repository.ImageRepository;
+import com.nbacm.newsfeed.domain.follow.entity.Follow;
+import com.nbacm.newsfeed.domain.follow.repository.FollowRepository;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
@@ -36,6 +38,7 @@ public class FeedServiceImpl implements FeedService {
     private final FeedRepository feedRepository;
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -80,9 +83,33 @@ public class FeedServiceImpl implements FeedService {
                 .map(FeedResponseDto::from);
     }
 
-    public Page<FeedResponseDto> findFeedsByUser(String email, Pageable pageable) {
+    @Override
+    public List<FeedResponseDto> getAllFeeds(String email, Pageable pageable) {
         Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
-        return feeds.map(FeedResponseDto::from);
+        return feeds.getContent().stream()
+                .map(FeedResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FeedResponseDto> getFeedsFromFollowedUsers(String email) {
+        // 현재 사용자를 가져옵니다.
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        // 현재 사용자가 팔로우하는 사람 목록을 가져옵니다.
+        List<Follow> follows = followRepository.findByFollowerUserId(currentUser.getUserId());
+        List<User> followedUsers = follows.stream()
+                .map(Follow::getFollowing)
+                .collect(Collectors.toList());
+
+        // 팔로우한 사람들의 게시물들을 최신순으로 가져옵니다.
+        List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(followedUsers);
+
+        // 게시물 리스트를 DTO로 변환하여 반환합니다.
+        return feeds.stream()
+                .map(FeedResponseDto::from)
+                .collect(Collectors.toList());
     }
 
 

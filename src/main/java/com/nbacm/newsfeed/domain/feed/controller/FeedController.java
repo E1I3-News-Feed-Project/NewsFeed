@@ -7,13 +7,11 @@ import com.nbacm.newsfeed.domain.user.common.utils.JwtUtils;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,16 +57,24 @@ public class FeedController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllFeeds(
+    public ResponseEntity<List<FeedResponseDto>> getAllFeeds(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
 
         String email = (String) request.getAttribute("AuthenticatedUser");
 
-        Pageable pageable = PageRequest.of(page-1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<FeedResponseDto> feedPage = feedService.findFeedsByUser(email, pageable);
-        return ResponseEntity.ok(feedPage);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<FeedResponseDto> feeds = feedService.getAllFeeds(email, pageable);
+
+        return ResponseEntity.ok(feeds);
+    }
+
+    @GetMapping("/followedUsers")
+    public ResponseEntity<List<FeedResponseDto>> getFeedsFromFollowedUsers(HttpServletRequest request) {
+        String email = (String) request.getAttribute("AuthenticatedUser");
+        List<FeedResponseDto> feeds = feedService.getFeedsFromFollowedUsers(email);
+        return ResponseEntity.ok(feeds);
     }
 
     @PutMapping(value = "/{feedId}")
