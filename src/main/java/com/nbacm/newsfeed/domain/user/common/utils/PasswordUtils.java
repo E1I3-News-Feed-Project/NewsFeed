@@ -1,7 +1,5 @@
 package com.nbacm.newsfeed.domain.user.common.utils;
-
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.stereotype.Component;
 
 public class PasswordUtils {
     public static String hashPassword(String password) {

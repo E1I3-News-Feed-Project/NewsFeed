@@ -28,7 +28,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> signupUser(@Valid @ModelAttribute UserRequestDto userRequestDto,
-                                                      @RequestParam(value = "profile_image",required = false) MultipartFile profileImage) {
+                                                      @RequestParam(value = "profileImage",required = false) MultipartFile profileImage) {
         try {
             UserResponseDto user = userService.signup(userRequestDto, profileImage);
             return ResponseEntity.ok(user);
