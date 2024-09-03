@@ -8,31 +8,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/follows")
+@RequestMapping("/api/v1")
 @RestController
 public class FollowController {
 
     private final FollowService followService;
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/users/{userId}/follow")
     public ResponseEntity<String> unfollow(@PathVariable Long userId, HttpServletRequest request) {
         followService.deleteFollow(userId, request);
         return ResponseEntity.ok("언팔 완료");
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping("/users/{userId}/follow")
     public ResponseEntity<FollowRequestResponse> sendFollowRequest(@PathVariable Long userId, HttpServletRequest request) {
         FollowRequestResponse followRequestResponse = followService.sendFollowRequest(userId, request);
         return ResponseEntity.ok(followRequestResponse);
     }
 
-    @PostMapping("/accept/{followRequestId}")
+    @PostMapping("/follows/{followRequestId}/accept")
     public ResponseEntity<FollowRequestResponse> acceptFollowRequest(@PathVariable Long followRequestId, HttpServletRequest request) {
         FollowRequestResponse followRequestResponse = followService.acceptFollowRequest(followRequestId, request);
         return ResponseEntity.ok(followRequestResponse);
     }
 
-    @PostMapping("/reject/{followRequestId}")
+    @PostMapping("/follows/{followRequestId}/reject")
     public ResponseEntity<FollowRequestResponse> rejectFollowRequest(@PathVariable Long followRequestId, HttpServletRequest request) {
         FollowRequestResponse followRequestResponse = followService.rejectFollowRequest(followRequestId, request);
         return ResponseEntity.ok(followRequestResponse);

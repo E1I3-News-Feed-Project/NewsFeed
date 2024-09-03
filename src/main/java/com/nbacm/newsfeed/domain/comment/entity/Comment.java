@@ -54,4 +54,12 @@ public class Comment extends BaseTime {
         this.user = user;
     }
 
+    public void increaseLikesCount() {
+        this.commentLikesCount++;
+    }
+
+    public void decreaseLikesCount() {
+        this.commentLikesCount++;
+    }
+
 }

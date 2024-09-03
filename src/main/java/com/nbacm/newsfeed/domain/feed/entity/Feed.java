@@ -59,4 +59,12 @@ public class Feed extends BaseTime {
     public void updateContent(String newContent) {
         this.content = newContent;
     }
+
+    public void increaseLikesCount() {
+        this.likesCount++;
+    }
+
+    public void decreaseLikesCount() {
+        this.likesCount--;
+    }
 }
