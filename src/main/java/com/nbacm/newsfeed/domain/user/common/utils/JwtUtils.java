@@ -22,9 +22,12 @@ public class JwtUtils {
     // Token 식별자
     public static final String BEARER_PREFIX = "Bearer ";
     // 토큰 만료시간
-    private final long TOKEN_TIME = 60 * 60 * 1000000L; // 6000분
+    private final long TOKEN_TIME = 15 * 60 * 100000L; // 15분
 
-    @Value("${jwt.secret.key}")// Base64 Encode 한 SecretKey
+    private final long REFRESH_TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L; // 14일
+
+    // Base64 Encode 한 SecretKey
+    @Value("${jwt.secret.key}")
     private  String SECRET_KEY;
 
     // 로그 설정
@@ -43,11 +46,31 @@ public class JwtUtils {
                 .setSubject(email)
                 .claim(AUTHORIZATION_KEY,email)
                 .setIssuedAt(now)
-
                 .setExpiration(new Date(now.getTime() + TOKEN_TIME))
                 .signWith(SignatureAlgorithm.HS256, getSecretKey())
                 .compact();
     }
+    //Refresh Token 생성
+    public String generateRefreshToken(String email) {
+        Date now = new Date();
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + REFRESH_TOKEN_TIME))
+                .signWith(SignatureAlgorithm.HS256, getSecretKey())
+                .compact();
+    }
+
+    public Long getExpirationFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.getExpiration().getTime() -System.currentTimeMillis();
+    }
+
+    // 리프레시 토큰의 만료 시간 반환
+    public Long getRefreshTokenExpirationTime() {
+        return REFRESH_TOKEN_TIME;
+    }
+
 
     // 토큰에서 사용자 이름 추출
     public String getUserEmailFromToken(String token) {
@@ -65,6 +88,20 @@ public class JwtUtils {
             logger.warn("이미 만료된 토큰 입니다",e);
             return true;
         }
+    }
+    public String expireToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSecretKey())
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date now = new Date();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(now) // 현재 시간으로 만료 설정
+                .signWith(SignatureAlgorithm.HS256, getSecretKey())
+                .compact();
     }
 
     // JWT 토큰에서 Claims 추출

@@ -6,8 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,10 +17,12 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    public JwtAuthenticationFilter(JwtUtils jwtUtils) {
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, RedisTemplate<String, String> redisTemplate) {
         this.jwtUtils = jwtUtils;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -33,10 +35,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("token : {}", token);
             try {
                 if (jwtUtils.validateToken(token)) {
-                    String email = jwtUtils.getUserEmailFromToken(token);// 요청 메서드가 PUT 또는 DELETE일 때만 자신의 이메일 확인
-                    if (("PUT".equalsIgnoreCase(request.getMethod()) || "DELETE".equalsIgnoreCase(request.getMethod()))) {
-                        String requestedEmail = request.getParameter("email"); // URL 파라미터에서 이메일 추출
-                        if (requestedEmail == null || !requestedEmail.equalsIgnoreCase(email)) {
+                    String email = jwtUtils.getUserEmailFromToken(token);
+                    // RefreshToken 존재 여부 확인
+                    String refreshToken = redisTemplate.opsForValue().get("RT:" + email);
+                    if (refreshToken == null) {
+                        throw new JwtException("로그아웃된 사용자입니다.");
+                    }
+                    // 요청 메서드가 PUT 또는 DELETE일 때만 자신의 이메일 확인
+                    if (("PUT".equalsIgnoreCase(request.getMethod()) || "DELETE".equalsIgnoreCase(request.getMethod()))) {// URL 파라미터에서 이메일 추출
+                        if (email == null || !email.equalsIgnoreCase(email)) {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.getWriter().write("접근이 거부되었습니다. 자신의 이메일이 아닙니다.");
                             return;
@@ -59,6 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
     private boolean isExcludedPath(String path) {
         return "/api/v1/users/login".equalsIgnoreCase(path) || "/api/v1/users".equalsIgnoreCase(path);
     }
