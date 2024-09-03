@@ -2,7 +2,6 @@ package com.nbacm.newsfeed.domain.feed.service;
 
 import com.nbacm.newsfeed.domain.feed.dto.request.FeedRequestDto;
 import com.nbacm.newsfeed.domain.feed.dto.response.FeedResponseDto;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,7 +16,9 @@ public interface FeedService {
 
     boolean deleteFeed(Long feedId, String email);
 
-    Page<FeedResponseDto> findFeedsByUser(String email, Pageable pageable);
+    List<FeedResponseDto> getAllFeeds(String email, Pageable pageable);
 
     FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException;
+
+    List<FeedResponseDto> getFriendsFeeds(String request);
 }
