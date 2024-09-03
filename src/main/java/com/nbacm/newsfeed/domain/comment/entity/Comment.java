@@ -31,8 +31,6 @@ public class Comment extends BaseTime {
     @ManyToOne(fetch = FetchType.LAZY)
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<Comment> relies = new ArrayList<>();
 
     private int  commentLikesCount;
 
