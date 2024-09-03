@@ -8,9 +8,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @NoArgsConstructor
 @Getter
@@ -27,10 +24,6 @@ public class Comment extends BaseTime {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Comment parent;
-
 
     private int  commentLikesCount;
 
