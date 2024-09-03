@@ -70,12 +70,10 @@ public class FeedController {
         return ResponseEntity.ok(feeds);
     }
 
-    @GetMapping("/friends")
-    public ResponseEntity<List<FeedResponseDto>> getFriendsFeeds(HttpServletRequest request) {
-        // 현재 사용자의 이메일을 가져옵니다.
+    @GetMapping("/followedUsers")
+    public ResponseEntity<List<FeedResponseDto>> getFeedsFromFollowedUsers(HttpServletRequest request) {
         String email = (String) request.getAttribute("AuthenticatedUser");
-
-        List<FeedResponseDto> feeds = feedService.getFriendsFeeds(email);
+        List<FeedResponseDto> feeds = feedService.getFeedsFromFollowedUsers(email);
         return ResponseEntity.ok(feeds);
     }
 

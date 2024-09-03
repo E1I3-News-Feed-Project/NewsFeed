@@ -20,5 +20,5 @@ public interface FeedService {
 
     FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException;
 
-    List<FeedResponseDto> getFriendsFeeds(String request);
+    List<FeedResponseDto> getFeedsFromFollowedUsers(String email);
 }

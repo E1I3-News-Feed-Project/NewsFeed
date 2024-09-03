@@ -92,19 +92,19 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public List<FeedResponseDto> getFriendsFeeds(String email) {
-        // 현재 사용자의 이메일을 가져옵니다.
+    public List<FeedResponseDto> getFeedsFromFollowedUsers(String email) {
+        // 현재 사용자를 가져옵니다.
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        // 현재 사용자를 팔로우하는 사용자 목록을 가져옵니다.
-        List<Follow> follows = followRepository.findByFollowingUserId(currentUser.getUserId());
-        List<User> friends = follows.stream()
-                .map(follow -> follow.getFollower())
+        // 현재 사용자가 팔로우하는 사람 목록을 가져옵니다.
+        List<Follow> follows = followRepository.findByFollowerUserId(currentUser.getUserId());
+        List<User> followedUsers = follows.stream()
+                .map(Follow::getFollowing)
                 .collect(Collectors.toList());
 
-        // 친구들이 작성한 게시물들을 최신순으로 가져옵니다.
-        List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(friends);
+        // 팔로우한 사람들의 게시물들을 최신순으로 가져옵니다.
+        List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(followedUsers);
 
         // 게시물 리스트를 DTO로 변환하여 반환합니다.
         return feeds.stream()
