@@ -1,4 +1,4 @@
-package com.nbacm.newsfeed.domain.likes.repositroy;
+package com.nbacm.newsfeed.domain.likes.repository;
 
 import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.likes.entity.CommentLikes;
@@ -10,4 +10,5 @@ public interface CommentLikesRepository extends JpaRepository<CommentLikes, Long
     boolean existsByUserAndComment(User user, Comment comment);
 
     void deleteByUserAndComment(User user, Comment comment);
+
 }

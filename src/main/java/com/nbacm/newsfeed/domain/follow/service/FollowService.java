@@ -5,11 +5,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface FollowService {
 
-    void deleteFollow(Long followingId, HttpServletRequest request);
+    void deleteFollow(Long followingId, String email);
 
-    FollowRequestResponse sendFollowRequest(Long receiverId, HttpServletRequest request);
+    FollowRequestResponse sendFollowRequest(Long receiverId, String email);
 
-    FollowRequestResponse acceptFollowRequest(Long requestId, HttpServletRequest request);
+    FollowRequestResponse acceptFollowRequest(Long requestId, String email);
 
-    FollowRequestResponse rejectFollowRequest(Long requestId, HttpServletRequest request);
+    FollowRequestResponse rejectFollowRequest(Long requestId, String email);
 }
