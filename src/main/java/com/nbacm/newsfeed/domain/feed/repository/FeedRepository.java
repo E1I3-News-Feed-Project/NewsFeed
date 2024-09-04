@@ -17,7 +17,7 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
             "LEFT JOIN FETCH f.images " +
             "LEFT JOIN FETCH f.user " +
             "WHERE f.user.email = :email")
-    Page<Feed> findByUserEmailOrderByCreatedAtDesc(@Param("email") String email, Pageable pageable);
+    Page<Feed> findByUserEmailOrderByUpdatedAtDesc(@Param("email") String email, Pageable pageable);
 
     @Query("SELECT DISTINCT f FROM Feed f " +
             "LEFT JOIN FETCH f.images " +
@@ -25,6 +25,6 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
             "WHERE f.feedId = :feedId")
     Optional<Feed> findByIdWithImagesAndUser(@Param("feedId") Long feedId);
 
-    @Query("SELECT f FROM Feed f LEFT JOIN FETCH f.images WHERE f.user IN :users ORDER BY f.createdAt DESC")
-    List<Feed> findByUserInOrderByCreatedAtDesc(@Param("users") List<User> users);
+    @Query("SELECT f FROM Feed f LEFT JOIN FETCH f.images WHERE f.user IN :users ORDER BY f.updatedAt DESC")
+    List<Feed> findByUserInOrderByUpdatedAtDesc(@Param("users") List<User> users);
 }
