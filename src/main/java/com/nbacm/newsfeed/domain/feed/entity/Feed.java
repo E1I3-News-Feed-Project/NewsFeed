@@ -4,6 +4,7 @@ import com.nbacm.newsfeed.domain.feed.dto.request.FeedRequestDto;
 import com.nbacm.newsfeed.domain.time.entity.BaseTime;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 public class Feed extends BaseTime {
