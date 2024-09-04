@@ -10,10 +10,8 @@ public class ReplyResponseDto {
     private String nickname;
 
     public ReplyResponseDto(ReplyComment replyComment) {
-        this.id = replyComment.getCoCommentId();
+        this.id = replyComment.getReplyId();
         this.comment = replyComment.getComment();
         this.nickname = replyComment.getNickname();
-//        this.nickname = String.valueOf(coComment.getNickname());
-
     }
 }

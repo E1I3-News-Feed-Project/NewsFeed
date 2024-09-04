@@ -22,6 +22,8 @@ public class ReplyServiceImpl implements ReplyService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
+    @Override
+    @Transactional
     public ReplyResponseDto ReplyComments(Long commentId, String email, ReplyRequestDto replyRequestDto) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new NullPointerException("해당 댓글을 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email).orElseThrow(() -> new NullPointerException("해당 유저를 찾을 수 없습니다."));
@@ -32,6 +34,7 @@ public class ReplyServiceImpl implements ReplyService {
         return new ReplyResponseDto(savedReplyComment);
     }
 
+    @Override
     @Transactional
     public ReplyResponseDto updateReplyComments(Long commentId, String email, ReplyRequestDto replyRequestDto) {
         ReplyComment replyComment = replyRepository.findById(commentId).orElseThrow(() -> new NullPointerException("해당 댓글을 찾을 수 없습니다."));
@@ -45,7 +48,7 @@ public class ReplyServiceImpl implements ReplyService {
         return new ReplyResponseDto(savedReplyComment);
     }
 
-    @Transactional(readOnly = true)
+    @Override
     public List<ReplyResponseDto> getAllReply(Long commentId) {
         List<ReplyComment> replyComments = replyRepository.findByParentCommentCommentId(commentId);
         System.out.println("Fetched reply: " + replyComments);  // 로그 추가
@@ -53,6 +56,7 @@ public class ReplyServiceImpl implements ReplyService {
         return replyComments.stream().map(ReplyResponseDto::new).toList();
     }
 
+    @Override
     @Transactional
     public ReplyResponseDto deleteReply(Long cocommentId, String email) {
         ReplyComment replyComment = replyRepository.findById(cocommentId).orElseThrow(() -> new NullPointerException("댓글을 찾을 수 없습니다."));

@@ -5,11 +5,15 @@ import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.time.entity.BaseTime;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Comment extends BaseTime {
 
@@ -21,21 +25,25 @@ public class Comment extends BaseTime {
 
     private String comment;
     private Long feedId;
+    private String email;
     @ManyToOne(fetch = FetchType.LAZY)
     private Feed feed;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    private int  commentLikesCount;
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyComment> replyComments = new ArrayList<>();
+
+    private int commentLikesCount;
     private int replyCount;
 
     public Comment(CommentRequestDto commentRequestDto, Feed feed, User user) {
-//        this.feedId = feed.getFeedId();
         this.commentId = commentRequestDto.getId();
         this.feed = feed;
         this.comment = commentRequestDto.getComment();
         this.nickname = user.getNickname();
+        this.email = user.getEmail();
         this.user = user;
     }
 
@@ -44,8 +52,9 @@ public class Comment extends BaseTime {
         this.feedId = feed.getFeedId();
         this.commentId = comment.getCommentId();
         this.comment = commentRequestDto.getComment();
-        this.nickname = commentRequestDto.getNickname();
+        this.nickname = user.getNickname();
         this.user = user;
+        this.email = user.getEmail();
     }
 
     public void increaseLikesCount() {

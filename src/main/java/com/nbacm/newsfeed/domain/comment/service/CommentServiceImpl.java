@@ -21,6 +21,8 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final FeedRepository feedRepository;
 
+    @Override
+    @Transactional
     public CommentResponseDto addComment(Long feedId, String email, CommentRequestDto commentRequestDto) {
         // 게시글 id 검색
         Feed feed = feedRepository.findById(feedId).orElseThrow(()-> new NullPointerException("해당 작성글이 존재하지 않습니다."));
@@ -36,30 +38,43 @@ public class CommentServiceImpl implements CommentService {
     }
 
     //코멘트 단건 조회
+    @Override
     public CommentResponseDto getComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("not found ID"));
         return new CommentResponseDto(comment);
     }
 
     //코멘트 전체 조회(modifiedAt 기준 내림 차순으로 정렬 필요)
+    @Override
     public List<CommentResponseDto> getAllComment() {
         return commentRepository.findAll().stream().map(CommentResponseDto::new).toList();
     }
 
     //코멘트 수정
+    @Override
     @Transactional
     public CommentResponseDto updateComments(Long commentId, Long feedId, String email, CommentRequestDto commentRequestDto) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("코멘트를 찾을 수 없습니다."));
         Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NullPointerException("피드를 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email).orElseThrow(()-> new NullPointerException("해당 유저를 찾을 수 없습니다"));
+        if (!comment.getEmail().equals(email)) {
+            throw new IllegalArgumentException("삭제 할 권한이 없습니다.");
+
+        }
         comment.updateComment(commentRequestDto, feed, comment, user);
         commentRepository.save(comment);
         return new CommentResponseDto(comment);
     }
 
     // 코맨트 삭제
-    public CommentResponseDto deleteComments(Long commentId) {
+    @Override
+    @Transactional
+    public CommentResponseDto deleteComments(Long commentId, String email) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("코멘트를 찾을 수 없습니다."));
+        if (!comment.getEmail().equals(email)) {
+            throw new IllegalArgumentException("삭제 할 권한이 없습니다.");
+
+        }
         commentRepository.delete(comment);
         return new CommentResponseDto(comment);
     }
