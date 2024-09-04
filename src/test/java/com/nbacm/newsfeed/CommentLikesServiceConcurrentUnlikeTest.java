@@ -1,8 +1,7 @@
 package com.nbacm.newsfeed;
 
+
 import com.nbacm.newsfeed.domain.likes.service.CommentLikesService;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.comment.repository.CommentRepository;
 import com.nbacm.newsfeed.domain.likes.dto.response.CommentLikesResponse;
@@ -12,6 +11,8 @@ import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,15 +21,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+
 @TestPropertySource(properties = {
         "spring.data.redis.host=localhost",
         "spring.data.redis.port=6379"
 })
-public class CommentLikesServiceConcurrentTest {
+public class CommentLikesServiceConcurrentUnlikeTest {
+
     @Autowired
     private CommentLikesService commentLikesService;
 
@@ -44,14 +46,12 @@ public class CommentLikesServiceConcurrentTest {
     private Comment testComment;
     private List<User> testUsers;
 
-
     @BeforeEach
     void setUp() {
         commentLikesRepository.deleteAll();
         commentRepository.deleteAll();
         userRepository.deleteAll();
-
-        // testComment 생성 시 필요한 필드를 설정
+        // testComment 생성
         testComment = new Comment();
         testComment.setComment("Test Comment");
         testComment.setCommentLikesCount(0);
@@ -60,35 +60,38 @@ public class CommentLikesServiceConcurrentTest {
         testComment.setCreatedAt(LocalDateTime.now());
         testComment.setUpdatedAt(LocalDateTime.now());
         testComment = commentRepository.save(testComment);
-
+        // testUsers 생성
         testUsers = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             User user = new User();
             user.setEmail("user" + i + "@test.com");
-            user.setNickname("User"+i);
-            user.setPassword("Knh7841526@"+i);
+            user.setNickname("User" + i);
+            user.setPassword("Knh7841526@" + i);
             testUsers.add(userRepository.save(user));
+
+            // 각 유저가 테스트 댓글에 좋아요를 먼저 추가
+            commentLikesService.likeComment(testComment.getCommentId(), user.getEmail());
         }
     }
 
     @Test
-    void testConcurrentLikeComment() throws InterruptedException {
+    void testConcurrentUnlikeComment() throws InterruptedException {
         int numberOfThreads = 100;
         ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
         CountDownLatch latch = new CountDownLatch(numberOfThreads);
-        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
 
         for (int i = 0; i < numberOfThreads; i++) {
             final int index = i;
             service.execute(() -> {
                 try {
-                    CommentLikesResponse response = commentLikesService.likeComment(testComment.getCommentId(), testUsers.get(index).getEmail());
-                    System.out.println("id:"+testComment.getCommentId());
+                    // 각 스레드가 좋아요 취소를 시도
+                    CommentLikesResponse response = commentLikesService.unlikeComment(testComment.getCommentId(), testUsers.get(index).getEmail());
                     if (response != null) {
-                        successCount.incrementAndGet();
+                        failCount.decrementAndGet();
                     }
                 } catch (Exception e) {
-                    System.out.println("예외발생"+e.getMessage());
+                    System.out.println("예외 발생: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -97,6 +100,8 @@ public class CommentLikesServiceConcurrentTest {
 
         latch.await(); // 모든 스레드가 작업을 마칠 때까지 대기
         service.shutdown();
+
+
 
 
     }

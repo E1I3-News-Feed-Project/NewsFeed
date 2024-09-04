@@ -4,8 +4,7 @@ import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.comment.repository.CommentRepository;
 import com.nbacm.newsfeed.domain.likes.dto.response.CommentLikesResponse;
 import com.nbacm.newsfeed.domain.likes.entity.CommentLikes;
-import com.nbacm.newsfeed.domain.likes.repositroy.CommentLikesRepository;
-import com.nbacm.newsfeed.domain.likes.service.CommentLikesService;
+import com.nbacm.newsfeed.domain.likes.repository.CommentLikesRepository;
 import com.nbacm.newsfeed.domain.likes.service.CommentLikesServiceImpl;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
@@ -76,7 +75,7 @@ public class CommentLikesServiceTest {
         }
 
         // UserRepository mock 설정
-        when(userRepository.finByEmailOrElseThrow(anyString())).thenAnswer(invocation -> {
+        when(userRepository.findByEmailOrElseThrow(anyString())).thenAnswer(invocation -> {
             String email = invocation.getArgument(0);
             return users.stream()
                     .filter(u -> u.getEmail().equals(email))
