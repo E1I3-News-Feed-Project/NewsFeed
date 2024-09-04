@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String login(UserLoginRequestDto userLoginRequestDto) {
-        User user = userRepository.finByEmailOrElseThrow(userLoginRequestDto.getEmail());
+        User user = userRepository.findByEmailOrElseThrow(userLoginRequestDto.getEmail());
         if (!PasswordUtils.checkPassword(userLoginRequestDto.getPassword(), user.getPassword())) {
             throw new NotMatchException("잘못된 비밀번호 입니다.");
         }
@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto updateUser(String email,UserRequestDto userRequestDto,MultipartFile profileImage) throws IOException {
-        User user = userRepository.finByEmailOrElseThrow(email);
+        User user = userRepository.findByEmailOrElseThrow(email);
 
         String newPassword = null;
         if (userRequestDto.getPassword() != null) {
@@ -125,7 +125,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public MyPageUserResponseDto getUser(String email) {
-        User user = userRepository.finByEmailOrElseThrow(email);
+        User user = userRepository.findByEmailOrElseThrow(email);
         String imageUrl = null;
         if(user.getProfileImage() != null && !user.getProfileImage().isEmpty()){
             Path filePath = Paths.get(baseDirectory, user.getProfileImage());
@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteAccount(String email, String password) {
-        User user = userRepository.finByEmailOrElseThrow(email);
+        User user = userRepository.findByEmailOrElseThrow(email);
         if(!PasswordUtils.checkPassword(password, user.getPassword())){
             throw new InvalidPasswordException("올바르지 않은 비밀번호 입니다.");
         }
@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Resource loadProfileImage(String email) throws IOException {
-        User user = userRepository.finByEmailOrElseThrow(email);
+        User user = userRepository.findByEmailOrElseThrow(email);
         String imagePath = user.getProfileImage();
         if (imagePath == null || imagePath.isEmpty()) {
             throw new NoSuchFileException("이미지를 찾을수 없습니다.");
