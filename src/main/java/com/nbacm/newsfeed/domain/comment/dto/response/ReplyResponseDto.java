@@ -13,7 +13,5 @@ public class ReplyResponseDto {
         this.id = replyComment.getCoCommentId();
         this.comment = replyComment.getComment();
         this.nickname = replyComment.getNickname();
-//        this.nickname = String.valueOf(coComment.getNickname());
-
     }
 }

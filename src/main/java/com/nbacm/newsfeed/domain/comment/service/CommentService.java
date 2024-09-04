@@ -14,7 +14,7 @@ public interface CommentService {
 
     CommentResponseDto updateComments(Long commentId, Long feedId, String email, CommentRequestDto commentRequestDto);
 
-    CommentResponseDto deleteComments(Long commentId);
+    CommentResponseDto deleteComments(Long commentId, String email);
 
     List<CommentResponseDto> getFeedComment(Long feedId);
 }
