@@ -8,30 +8,32 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
+@Table(name = "reply_comment")
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 
 public class ReplyComment extends BaseTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long replyId;
+    private Long coCommentId;
+
     private String nickname;
     private String comment;
     private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id")
+    @JoinColumn(name = "parent_comment_id")
     private Comment parentComment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    private Feed feed;
-
     public ReplyComment(ReplyRequestDto commentRequestDto, Comment comment, User user) {
-        this.replyId = commentRequestDto.getId();
+        this.coCommentId = commentRequestDto.getId();
         this.nickname = user.getNickname();
         this.comment = commentRequestDto.getComment();
         this.parentComment = comment;
@@ -40,8 +42,7 @@ public class ReplyComment extends BaseTime {
     }
 
     public ReplyComment(Comment comment) {
-        this.replyId = comment.getCommentId();
-        this.nickname = comment.getNickname();
+        this.coCommentId = comment.getCommentId();
         this.comment = comment.getComment();
     }
 

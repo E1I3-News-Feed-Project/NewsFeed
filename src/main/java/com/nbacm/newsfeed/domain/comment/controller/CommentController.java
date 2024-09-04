@@ -25,12 +25,8 @@ private final CommentServiceImpl commentService;
                                                      HttpServletRequest request,
                                                      @RequestBody CommentRequestDto commentRequestDto) {
         String email = (String) request.getAttribute("AuthenticatedUser");
-        try {
             CommentResponseDto comment = commentService.addComment(feedId, email, commentRequestDto);
             return ResponseEntity.ok(comment);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     //댓글 아이디 단건 조회
@@ -55,24 +51,15 @@ private final CommentServiceImpl commentService;
                                                      HttpServletRequest request,
                                                      @RequestBody CommentRequestDto commentRequestDto) {
         String email = (String) request.getAttribute("AuthenticatedUser");
-        try{
             CommentResponseDto comment = commentService.updateComments(commentId, feedId, email, commentRequestDto);
             return ResponseEntity.ok(comment);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     //댓글 삭제
     @DeleteMapping("/{commentId}")
     ResponseEntity<CommentResponseDto> deleteComment(@PathVariable Long commentId, HttpServletRequest request) {
         String email = (String) request.getAttribute("AuthenticatedUser");
-        try{
             CommentResponseDto comment = commentService.deleteComments(commentId, email);
             return ResponseEntity.ok(comment);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-
     }
 }

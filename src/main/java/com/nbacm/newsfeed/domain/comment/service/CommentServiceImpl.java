@@ -4,6 +4,8 @@ import com.nbacm.newsfeed.domain.comment.repository.CommentRepository;
 import com.nbacm.newsfeed.domain.comment.dto.request.CommentRequestDto;
 import com.nbacm.newsfeed.domain.comment.dto.response.CommentResponseDto;
 import com.nbacm.newsfeed.domain.comment.entity.Comment;
+import com.nbacm.newsfeed.domain.exception.NotFoundException;
+import com.nbacm.newsfeed.domain.exception.UnauthorizedException;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
 import com.nbacm.newsfeed.domain.user.entity.User;
@@ -25,9 +27,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponseDto addComment(Long feedId, String email, CommentRequestDto commentRequestDto) {
         // 게시글 id 검색
-        Feed feed = feedRepository.findById(feedId).orElseThrow(()-> new NullPointerException("해당 작성글이 존재하지 않습니다."));
+        Feed feed = feedRepository.findById(feedId).orElseThrow(()-> new NotFoundException("해당 작성글이 존재하지 않습니다."));
         // email 검색
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new NullPointerException("해당 유저를 찾을 수 없습니다."));
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("해당 유저를 찾을 수 없습니다."));
 
         // 요청 정보 취합
         Comment comment = new Comment(commentRequestDto, feed, user);
@@ -40,25 +42,25 @@ public class CommentServiceImpl implements CommentService {
     //코멘트 단건 조회
     @Override
     public CommentResponseDto getComment(Long commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("not found ID"));
+        Comment comment = commentRepository.findByCommentId(commentId).orElseThrow(()->new NotFoundException("not found ID"));
         return new CommentResponseDto(comment);
     }
 
     //코멘트 전체 조회(modifiedAt 기준 내림 차순으로 정렬 필요)
     @Override
     public List<CommentResponseDto> getAllComment() {
-        return commentRepository.findAll().stream().map(CommentResponseDto::new).toList();
+        return commentRepository.findAllByOrderByUpdatedAtDesc().stream().map(CommentResponseDto::new).toList();
     }
 
     //코멘트 수정
     @Override
     @Transactional
     public CommentResponseDto updateComments(Long commentId, Long feedId, String email, CommentRequestDto commentRequestDto) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("코멘트를 찾을 수 없습니다."));
-        Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NullPointerException("피드를 찾을 수 없습니다."));
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new NullPointerException("해당 유저를 찾을 수 없습니다"));
-        if (!comment.getEmail().equals(email)) {
-            throw new IllegalArgumentException("삭제 할 권한이 없습니다.");
+        Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NotFoundException("코멘트를 찾을 수 없습니다."));
+        Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NotFoundException("피드를 찾을 수 없습니다."));
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("해당 유저를 찾을 수 없습니다"));
+        if (!comment.getUser().getEmail().equals(email)) {
+            throw new UnauthorizedException("삭제 할 권한이 없습니다.");
 
         }
         comment.updateComment(commentRequestDto, feed, comment, user);
@@ -70,9 +72,9 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentResponseDto deleteComments(Long commentId, String email) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NullPointerException("코멘트를 찾을 수 없습니다."));
-        if (!comment.getEmail().equals(email)) {
-            throw new IllegalArgumentException("삭제 할 권한이 없습니다.");
+        Comment comment = commentRepository.findById(commentId).orElseThrow(()->new NotFoundException("코멘트를 찾을 수 없습니다."));
+        if (!comment.getUser().getEmail().equals(email)) {
+            throw new UnauthorizedException("삭제 할 권한이 없습니다.");
 
         }
         commentRepository.delete(comment);
@@ -81,7 +83,7 @@ public class CommentServiceImpl implements CommentService {
 
     // feed id 기준 코멘트 조회
     public List<CommentResponseDto> getFeedComment(Long feedId) {
-        Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NullPointerException("게시글을 찾을 수 없습니다."));
-        return commentRepository.findByFeed(feed).stream().map(CommentResponseDto::new).toList();
+        Feed feed  = feedRepository.findById(feedId).orElseThrow(()->new NotFoundException("게시글을 찾을 수 없습니다."));
+        return commentRepository.findByFeedOrderByUpdatedAtDesc(feed).stream().map(CommentResponseDto::new).toList();
     }
 }

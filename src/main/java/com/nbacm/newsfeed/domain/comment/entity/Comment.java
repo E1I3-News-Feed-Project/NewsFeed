@@ -5,30 +5,40 @@ import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.time.entity.BaseTime;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
+@Table(name = "comment")
+
 public class Comment extends BaseTime {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId;
 
-    @Column(name = "nickname", nullable = false)
-    private String nickname;
+//    @Column(name = "nickname", nullable = false)
+//    private String nickname;
+//    private String email;
 
-    private String comment;
-    private Long feedId;
     @ManyToOne(fetch = FetchType.LAZY)
     private Feed feed;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyComment> replies = new ArrayList<>();
+
+    private String comment;
+    private Long feedId;
     private int commentLikesCount;
     private int replyCount;
 
@@ -36,7 +46,6 @@ public class Comment extends BaseTime {
         this.commentId = commentRequestDto.getId();
         this.feed = feed;
         this.comment = commentRequestDto.getComment();
-        this.nickname = user.getNickname();
         this.user = user;
     }
 
@@ -45,7 +54,6 @@ public class Comment extends BaseTime {
         this.feedId = feed.getFeedId();
         this.commentId = comment.getCommentId();
         this.comment = commentRequestDto.getComment();
-        this.nickname = commentRequestDto.getNickname();
         this.user = user;
     }
 
