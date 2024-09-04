@@ -98,7 +98,6 @@ public class FeedServiceImpl implements FeedService {
         // 현재 사용자를 가져옵니다.
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("사용자가 발견되지 않았습니다."));
-
         // 팔로우한 사용자 목록을 가져옵니다.
         List<User> followedUsers = followRepository.findFollowedUsersByFollower(currentUser);
 

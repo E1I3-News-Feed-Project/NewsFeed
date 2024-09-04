@@ -47,7 +47,6 @@ public class CommentLikesServiceImpl implements CommentLikesService {
                             .comment(comment)
                             .build();
                     commentLikesRepository.save(commentLikes);
-
                     // 댓글의 좋아요 수를 증가
                     comment.increaseLikesCount();
                     commentRepository.save(comment); // 좋아요 수 반영을 위해 저장
