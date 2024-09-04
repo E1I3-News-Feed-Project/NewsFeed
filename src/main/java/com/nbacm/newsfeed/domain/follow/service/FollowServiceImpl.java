@@ -22,8 +22,8 @@ public class FollowServiceImpl implements FollowService{
     private final UserRepository userRepository;
 
     @Transactional
-    public void deleteFollow(Long followingId, HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+    @Override
+    public void deleteFollow(Long followingId, String email) {
         User follower = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
         User following = userRepository.findById(followingId).orElseThrow(RuntimeException::new);
 
@@ -31,8 +31,8 @@ public class FollowServiceImpl implements FollowService{
     }
 
     @Transactional
-    public FollowRequestResponse sendFollowRequest(Long receiverId, HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+    @Override
+    public FollowRequestResponse sendFollowRequest(Long receiverId, String email) {
         User sender = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
         User receiver = userRepository.findById(receiverId).orElseThrow(RuntimeException::new);
 
@@ -58,8 +58,8 @@ public class FollowServiceImpl implements FollowService{
     }
 
     @Transactional
-    public FollowRequestResponse acceptFollowRequest(Long requestId, HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+    @Override
+    public FollowRequestResponse acceptFollowRequest(Long requestId, String email) {
         User receiver = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
         FollowRequest followRequest = followRequestRepository.findById(requestId).orElseThrow(() -> new RuntimeException("팔로우 신청을 찾을 수 없습니다."));
 
@@ -78,8 +78,8 @@ public class FollowServiceImpl implements FollowService{
     }
 
     @Transactional
-    public FollowRequestResponse rejectFollowRequest(Long requestId, HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+    @Override
+    public FollowRequestResponse rejectFollowRequest(Long requestId, String email) {
         User receiver = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
         FollowRequest followRequest = followRequestRepository.findById(requestId).orElseThrow(() -> new RuntimeException("팔로우 신청을 찾을 수 없습니다."));
 

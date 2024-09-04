@@ -7,10 +7,12 @@ import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @NoArgsConstructor
 @Getter
+@Setter
 public class Comment extends BaseTime {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +29,7 @@ public class Comment extends BaseTime {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    private int  commentLikesCount;
+    private int commentLikesCount;
     private int replyCount;
 
     public Comment(CommentRequestDto commentRequestDto, Feed feed, User user) {

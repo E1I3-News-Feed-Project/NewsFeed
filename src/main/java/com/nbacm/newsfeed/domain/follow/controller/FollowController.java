@@ -16,25 +16,29 @@ public class FollowController {
 
     @DeleteMapping("/users/{userId}/follow")
     public ResponseEntity<String> unfollow(@PathVariable Long userId, HttpServletRequest request) {
-        followService.deleteFollow(userId, request);
+        String email = request.getAttribute("AuthenticatedUser").toString();
+        followService.deleteFollow(userId,email);
         return ResponseEntity.ok("언팔 완료");
     }
 
     @PostMapping("/users/{userId}/follow")
     public ResponseEntity<FollowRequestResponse> sendFollowRequest(@PathVariable Long userId, HttpServletRequest request) {
-        FollowRequestResponse followRequestResponse = followService.sendFollowRequest(userId, request);
+        String email = request.getAttribute("AuthenticatedUser").toString();
+        FollowRequestResponse followRequestResponse = followService.sendFollowRequest(userId, email);
         return ResponseEntity.ok(followRequestResponse);
     }
 
     @PostMapping("/follows/{followRequestId}/accept")
     public ResponseEntity<FollowRequestResponse> acceptFollowRequest(@PathVariable Long followRequestId, HttpServletRequest request) {
-        FollowRequestResponse followRequestResponse = followService.acceptFollowRequest(followRequestId, request);
+        String email = request.getAttribute("AuthenticatedUser").toString();
+        FollowRequestResponse followRequestResponse = followService.acceptFollowRequest(followRequestId, email);
         return ResponseEntity.ok(followRequestResponse);
     }
 
     @PostMapping("/follows/{followRequestId}/reject")
     public ResponseEntity<FollowRequestResponse> rejectFollowRequest(@PathVariable Long followRequestId, HttpServletRequest request) {
-        FollowRequestResponse followRequestResponse = followService.rejectFollowRequest(followRequestId, request);
+        String email = request.getAttribute("AuthenticatedUser").toString();
+        FollowRequestResponse followRequestResponse = followService.rejectFollowRequest(followRequestId,email);
         return ResponseEntity.ok(followRequestResponse);
     }
 

@@ -45,6 +45,9 @@ dependencies {
     implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
 
+    implementation 'org.redisson:redisson:3.22.1'
+
+
 }
 
 tasks.named('test') {
