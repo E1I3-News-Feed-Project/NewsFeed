@@ -1,6 +1,8 @@
 package com.nbacm.newsfeed.domain.user.exception;
 
-public class AlreadyDeletedException extends RuntimeException{
+import com.nbacm.newsfeed.domain.exception.ForbiddenException;
+
+public class AlreadyDeletedException extends ForbiddenException {
     public AlreadyDeletedException(String message) {
         super(message);
     }

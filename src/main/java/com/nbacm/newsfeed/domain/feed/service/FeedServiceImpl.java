@@ -88,7 +88,7 @@ public class FeedServiceImpl implements FeedService {
         Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
         return feeds.getContent().stream()
                 .map(FeedResponseDto::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -101,7 +101,7 @@ public class FeedServiceImpl implements FeedService {
         List<Follow> follows = followRepository.findByFollowerUserId(currentUser.getUserId());
         List<User> followedUsers = follows.stream()
                 .map(Follow::getFollowing)
-                .collect(Collectors.toList());
+                .toList();
 
         // 팔로우한 사람들의 게시물들을 최신순으로 가져옵니다.
         List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(followedUsers);
@@ -109,7 +109,7 @@ public class FeedServiceImpl implements FeedService {
         // 게시물 리스트를 DTO로 변환하여 반환합니다.
         return feeds.stream()
                 .map(FeedResponseDto::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
 

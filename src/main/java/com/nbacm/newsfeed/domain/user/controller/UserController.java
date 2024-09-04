@@ -28,13 +28,10 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> signupUser(@Valid @ModelAttribute UserRequestDto userRequestDto,
-                                                      @RequestParam(value = "profileImage",required = false) MultipartFile profileImage) {
-        try {
-            UserResponseDto user = userService.signup(userRequestDto, profileImage);
-            return ResponseEntity.ok(user);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+                                                      @RequestParam(value = "profileImage",required = false)
+                                                      MultipartFile profileImage) throws IOException {
+        UserResponseDto user = userService.signup(userRequestDto, profileImage);
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/login")
@@ -44,44 +41,31 @@ public class UserController {
     }
 
     @GetMapping(value = "/profile")
-    public ResponseEntity<Resource> getProfileImage(HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser"); // 인증된 사용자 이메일 가져오기
-        try {
-            Resource file = userService.loadProfileImage(email);
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-                    .body(file);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public ResponseEntity<Resource> getProfileImage(HttpServletRequest request) throws IOException {
+        String email =  request.getAttribute("AuthenticatedUser").toString(); // 인증된 사용자 이메일 가져오기
+        Resource file = userService.loadProfileImage(email);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                .body(file);
     }
 
     @GetMapping("/MyPage")
     public ResponseEntity<MyPageUserResponseDto> getMyPageUsers(HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+        String email = request.getAttribute("AuthenticatedUser").toString();
         MyPageUserResponseDto myPageUserResponseDto =userService.getUser(email);
-        return ResponseEntity.ok()
-
-                .body(myPageUserResponseDto);
+        return ResponseEntity.ok().body(myPageUserResponseDto);
     }
 
     @PutMapping(value = "/update",produces = "application/json")
     public ResponseEntity<UserResponseDto> update(@ModelAttribute UserRequestDto userRequestDto,
                                                   @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
-                                                  HttpServletRequest request) {
-        try {
-            String email = (String) request.getAttribute("AuthenticatedUser");
-            UserResponseDto updatedUser = userService.updateUser(email, userRequestDto, profileImage);
-            return ResponseEntity.ok()
-                    .body(updatedUser);
-
-        } catch (NotMatchException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+                                                  HttpServletRequest request) throws IOException {
+        String email = request.getAttribute("AuthenticatedUser").toString();
+        UserResponseDto updatedUser = userService.updateUser(email, userRequestDto, profileImage);
+        return ResponseEntity.ok().body(updatedUser);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
@@ -94,7 +78,7 @@ public class UserController {
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteAccount(@RequestBody DeleteAccountRequestDto deleteAccountRequestDto,
                                                 HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+        String email = request.getAttribute("AuthenticatedUser").toString();
         userService.deleteAccount(email, deleteAccountRequestDto.getPassword());
         return ResponseEntity.ok("계정이 성공적으로 삭제되었습니다.");
     }

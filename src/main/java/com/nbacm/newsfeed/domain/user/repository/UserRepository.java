@@ -2,6 +2,7 @@ package com.nbacm.newsfeed.domain.user.repository;
 
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
+import com.nbacm.newsfeed.domain.user.exception.UserNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   }
 
   default User findByIdOrElseThrow(Long userId) {
-    return findById(userId).orElseThrow(()->new NotMatchException("사용자를 찾을수 없습니다"));
+    return findById(userId).orElseThrow(()->new UserNotFoundException("사용자를 찾을수 없습니다"));
   }
 
   @Query("SELECT u FROM User u WHERE u.isDeleted = true AND u.deletedAt < :deletedAt")
