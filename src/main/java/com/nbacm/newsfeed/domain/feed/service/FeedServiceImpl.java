@@ -1,12 +1,14 @@
 package com.nbacm.newsfeed.domain.feed.service;
 
+import com.nbacm.newsfeed.domain.exception.NotFoundException;
+import com.nbacm.newsfeed.domain.exception.UnauthorizedException;
 import com.nbacm.newsfeed.domain.feed.dto.request.FeedRequestDto;
 import com.nbacm.newsfeed.domain.feed.dto.response.FeedResponseDto;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.feed.entity.Image;
+import com.nbacm.newsfeed.domain.feed.exception.FileDeletionException;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
 import com.nbacm.newsfeed.domain.feed.repository.ImageRepository;
-import com.nbacm.newsfeed.domain.follow.entity.Follow;
 import com.nbacm.newsfeed.domain.follow.repository.FollowRepository;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
@@ -25,11 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,12 +41,13 @@ public class FeedServiceImpl implements FeedService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    // 게시글 생성
     @Override
     @Transactional
     public void createFeed(FeedRequestDto requestDto) throws IOException {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         // 새 게시물 생성
         Feed feed = new Feed(requestDto.getContent(), user, 0);
@@ -76,35 +75,34 @@ public class FeedServiceImpl implements FeedService {
         feedRepository.save(savedFeed);
     }
 
+    // 특정 게시글 조회
     @Override
     public Optional<FeedResponseDto> getFeedById(Long feedId, String email) {
-        return feedRepository.findById(feedId)
-                .filter(feed -> feed.getAuthor().getEmail().equals(email)) // 작성자 확인
+        return feedRepository.findByIdWithImagesAndUser(feedId)
+                .filter(feed -> feed.getUser().getEmail().equals(email)) // 작성자 확인
                 .map(FeedResponseDto::from);
     }
 
+    // 작성자 이메일에 해당하는 게시글 조회
     @Override
     public List<FeedResponseDto> getAllFeeds(String email, Pageable pageable) {
-        Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
+        Page<Feed> feeds = feedRepository.findByUserEmailOrderByUpdatedAtDesc(email, pageable);
         return feeds.getContent().stream()
                 .map(FeedResponseDto::from)
                 .toList();
     }
 
+    // 팔로우한 친구들의 게시글 조회
     @Override
     public List<FeedResponseDto> getFeedsFromFollowedUsers(String email) {
         // 현재 사용자를 가져옵니다.
         User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
-
-        // 현재 사용자가 팔로우하는 사람 목록을 가져옵니다.
-        List<Follow> follows = followRepository.findByFollowerUserId(currentUser.getUserId());
-        List<User> followedUsers = follows.stream()
-                .map(Follow::getFollowing)
-                .toList();
+                .orElseThrow(() -> new NotFoundException("사용자가 발견되지 않았습니다."));
+        // 팔로우한 사용자 목록을 가져옵니다.
+        List<User> followedUsers = followRepository.findFollowedUsersByFollower(currentUser);
 
         // 팔로우한 사람들의 게시물들을 최신순으로 가져옵니다.
-        List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(followedUsers);
+        List<Feed> feeds = feedRepository.findByUserInOrderByUpdatedAtDesc(followedUsers);
 
         // 게시물 리스트를 DTO로 변환하여 반환합니다.
         return feeds.stream()
@@ -113,14 +111,15 @@ public class FeedServiceImpl implements FeedService {
     }
 
 
+    // 게시글 수정
     @Override
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotMatchException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new NotMatchException("게시물이 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("게시물이 존재하지 않습니다."));
 
         if (!feed.getAuthor().getEmail().equals(email)) {
             throw new NotMatchException("작성자만 게시물을 수정할 수 있습니다.");
@@ -140,9 +139,14 @@ public class FeedServiceImpl implements FeedService {
                 if (imagePath != null && !imagePath.isEmpty()) {
                     try {
                         Path fileToDeletePath = Paths.get(imagePath);
-                        Files.deleteIfExists(fileToDeletePath);
+                        if (Files.deleteIfExists(fileToDeletePath)) {
+                            // 파일 삭제 성공
+                        } else {
+                            // 파일이 존재하지 않을 때
+                            throw new FileDeletionException("파일이 존재하지 않습니다: " + imagePath);
+                        }
                     } catch (IOException e) {
-                        System.err.println("이미지 삭제 중 오류 발생: " + e.getMessage());
+                        throw new FileDeletionException("이미지 삭제 중 오류 발생: " + e.getMessage(), e);
                     }
                 }
             }
@@ -171,14 +175,15 @@ public class FeedServiceImpl implements FeedService {
         return FeedResponseDto.from(updatedFeed);
     }
 
+    // 게시글 삭제
     @Override
     @Transactional
     public boolean deleteFeed(Long feedId, String email) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         if (!feed.getAuthor().getEmail().equals(email)) {
-            throw new IllegalArgumentException("작성자만 게시물을 삭제할 수 있습니다.");
+            throw new UnauthorizedException("작성자만 게시물을 삭제할 수 있습니다.");
         }
 
         // 1. 이미지 파일 삭제
@@ -191,10 +196,10 @@ public class FeedServiceImpl implements FeedService {
                     Files.delete(fileToDeletePath);
                     System.out.println("파일 삭제 성공: " + fileToDeletePath);
                 } else {
-                    System.out.println("파일이 존재하지 않음: " + fileToDeletePath);
+                    throw new FileDeletionException("파일이 존재하지 않습니다: " + fileToDeletePath);
                 }
             } catch (IOException e) {
-                System.err.println("이미지 삭제 중 오류 발생: " + e.getMessage());
+                throw new FileDeletionException("이미지 삭제 중 오류 발생: " + e.getMessage(), e);
             }
         }
 
@@ -203,6 +208,7 @@ public class FeedServiceImpl implements FeedService {
         return true;
     }
 
+    // 이미지 저장
     private String saveImage(MultipartFile imageFile, String email) throws IOException {
         String userDirectory = uploadDir + "/" + email;
         Path userPath = Paths.get(userDirectory);
@@ -211,7 +217,7 @@ public class FeedServiceImpl implements FeedService {
             Files.createDirectories(userPath);
         }
 
-        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(imageFile.getOriginalFilename());
+        String fileName = UUID.randomUUID() + "_" + StringUtils.cleanPath(Objects.requireNonNull(imageFile.getOriginalFilename()));
         Path targetLocation = userPath.resolve(fileName);
 
         Files.copy(imageFile.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);

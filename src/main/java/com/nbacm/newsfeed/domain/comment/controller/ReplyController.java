@@ -17,47 +17,47 @@ import java.util.List;
 public class ReplyController {
     private final ReplyServiceImpl replyService;
 
+    //대댓글 작성
     @PostMapping("/{commentId}")
-    ResponseEntity<ReplyResponseDto> createCoComment (@PathVariable Long commentId,
-                                                      HttpServletRequest request,
-                                                      @RequestBody ReplyRequestDto commentRequestDto){
-        String email = (String) request.getAttribute("AuthenticatedUser");
-        try{
-            ReplyResponseDto comment = replyService.ReplyComments(commentId, email, commentRequestDto);
-            return ResponseEntity.ok(comment);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PutMapping("/{commentId}")
-    ResponseEntity<ReplyResponseDto> updateCoComment(@PathVariable Long commentId, HttpServletRequest request, @RequestBody ReplyRequestDto commentRequestDto){
+    ResponseEntity<ReplyResponseDto> createReply(@PathVariable Long commentId,
+                                                 HttpServletRequest request,
+                                                 @RequestBody ReplyRequestDto commentRequestDto) {
         String email = (String) request.getAttribute("AuthenticatedUser");
         try {
-            ReplyResponseDto comment = replyService.updateReplyComments(commentId, email, commentRequestDto);
+            ReplyResponseDto comment = replyService.ReplyComments(commentId, email, commentRequestDto);
             return ResponseEntity.ok(comment);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+    // 대댓글 수정
+    @PutMapping("/{commentId}")
+    ResponseEntity<ReplyResponseDto> updateReply(@PathVariable Long commentId, HttpServletRequest request, @RequestBody ReplyRequestDto commentRequestDto) {
+        String email = (String) request.getAttribute("AuthenticatedUser");
+        ReplyResponseDto comment = replyService.updateReplyComments(commentId, email, commentRequestDto);
+        return ResponseEntity.ok(comment);
+    }
+
+    // 대댓글 -> 댓글 아이디별 조회
     @GetMapping("/{commentId}")
-    ResponseEntity<List<ReplyResponseDto>> getCoComment(@PathVariable Long commentId){
-        try{
+    ResponseEntity<List<ReplyResponseDto>> getReply(@PathVariable Long commentId) {
+        try {
             List<ReplyResponseDto> getAllCoComment = replyService.getAllReply(commentId);
             return ResponseEntity.ok(getAllCoComment);
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
+    // 대댓글 삭제
     @DeleteMapping("/{replyId}")
-    ResponseEntity<ReplyResponseDto> deleteCoComment(@PathVariable Long replyId, HttpServletRequest request){
+    ResponseEntity<ReplyResponseDto> deleteReply(@PathVariable Long replyId, HttpServletRequest request) {
         String email = (String) request.getAttribute("AuthenticatedUser");
-        try{
-            ReplyResponseDto comment = replyService.deleteReply(replyId,email);
+        try {
+            ReplyResponseDto comment = replyService.deleteReply(replyId, email);
             return ResponseEntity.ok(comment);
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

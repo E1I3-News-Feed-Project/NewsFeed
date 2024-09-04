@@ -1,6 +1,7 @@
 package com.nbacm.newsfeed.domain.feed.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,7 +9,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
