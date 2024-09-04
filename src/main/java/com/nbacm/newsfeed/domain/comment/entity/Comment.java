@@ -26,6 +26,7 @@ public class Comment extends BaseTime {
     private User user;
 
     private int  commentLikesCount;
+    private int replyCount;
 
     public Comment(CommentRequestDto commentRequestDto, Feed feed, User user) {
 //        this.feedId = feed.getFeedId();
@@ -53,4 +54,13 @@ public class Comment extends BaseTime {
         this.commentLikesCount++;
     }
 
+    public void incrementReplyCount() {
+        this.replyCount++;
+    }
+
+    public void decrementReplyCount() {
+        if (this.replyCount > 0) {
+            this.replyCount--;
+        }
+    }
 }
