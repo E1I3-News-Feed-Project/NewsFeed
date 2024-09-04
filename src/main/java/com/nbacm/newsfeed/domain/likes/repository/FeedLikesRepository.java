@@ -1,4 +1,4 @@
-package com.nbacm.newsfeed.domain.likes.repositroy;
+package com.nbacm.newsfeed.domain.likes.repository;
 
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.likes.entity.FeedLikes;
@@ -10,4 +10,5 @@ public interface FeedLikesRepository extends JpaRepository<FeedLikes, Long> {
     boolean existsByUserAndFeed(User user, Feed feed);
 
     void deleteByUserAndFeed(User user, Feed feed);
+
 }

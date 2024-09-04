@@ -3,13 +3,11 @@ package com.nbacm.newsfeed.domain.likes.entity;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Setter
 @Entity
 public class FeedLikes {
 
