@@ -43,6 +43,7 @@ public class FeedServiceImpl implements FeedService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    // 게시글 생성
     @Override
     @Transactional
     public void createFeed(FeedRequestDto requestDto) throws IOException {
@@ -76,13 +77,15 @@ public class FeedServiceImpl implements FeedService {
         feedRepository.save(savedFeed);
     }
 
+    // 특정 게시글 조회
     @Override
     public Optional<FeedResponseDto> getFeedById(Long feedId, String email) {
-        return feedRepository.findById(feedId)
-                .filter(feed -> feed.getAuthor().getEmail().equals(email)) // 작성자 확인
+        return feedRepository.findByIdWithImagesAndUser(feedId)
+                .filter(feed -> feed.getUser().getEmail().equals(email)) // 작성자 확인
                 .map(FeedResponseDto::from);
     }
 
+    // 작성자 이메일에 해당하는 게시글 조회
     @Override
     public List<FeedResponseDto> getAllFeeds(String email, Pageable pageable) {
         Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
@@ -91,17 +94,15 @@ public class FeedServiceImpl implements FeedService {
                 .collect(Collectors.toList());
     }
 
+    // 팔로우한 친구들의 게시글 조회
     @Override
     public List<FeedResponseDto> getFeedsFromFollowedUsers(String email) {
         // 현재 사용자를 가져옵니다.
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        // 현재 사용자가 팔로우하는 사람 목록을 가져옵니다.
-        List<Follow> follows = followRepository.findByFollowerUserId(currentUser.getUserId());
-        List<User> followedUsers = follows.stream()
-                .map(Follow::getFollowing)
-                .collect(Collectors.toList());
+        // 팔로우한 사용자 목록을 가져옵니다.
+        List<User> followedUsers = followRepository.findFollowedUsersByFollower(currentUser);
 
         // 팔로우한 사람들의 게시물들을 최신순으로 가져옵니다.
         List<Feed> feeds = feedRepository.findByUserInOrderByCreatedAtDesc(followedUsers);
@@ -113,6 +114,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
 
+    // 게시글 수정
     @Override
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedRequestDto feedRequestDto, List<MultipartFile> images, String email) throws IOException {
@@ -171,6 +173,7 @@ public class FeedServiceImpl implements FeedService {
         return FeedResponseDto.from(updatedFeed);
     }
 
+    // 게시글 삭제
     @Override
     @Transactional
     public boolean deleteFeed(Long feedId, String email) {
@@ -203,6 +206,7 @@ public class FeedServiceImpl implements FeedService {
         return true;
     }
 
+    // 이미지 저장
     private String saveImage(MultipartFile imageFile, String email) throws IOException {
         String userDirectory = uploadDir + "/" + email;
         Path userPath = Paths.get(userDirectory);
