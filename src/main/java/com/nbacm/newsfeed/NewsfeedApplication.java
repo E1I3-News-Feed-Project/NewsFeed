@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableJpaAuditing
 public class NewsfeedApplication {
 
     public static void main(String[] args) {

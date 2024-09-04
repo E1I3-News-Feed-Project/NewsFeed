@@ -1,7 +1,6 @@
 package com.nbacm.newsfeed.domain.comment.entity;
 
-import com.nbacm.newsfeed.domain.comment.dto.request.CoCommentRequestDto;
-import com.nbacm.newsfeed.domain.comment.dto.request.CommentRequestDto;
+import com.nbacm.newsfeed.domain.comment.dto.request.ReplyRequestDto;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.time.entity.BaseTime;
 import com.nbacm.newsfeed.domain.user.entity.User;
@@ -13,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 
-public class CoComment extends BaseTime {
+public class ReplyComment extends BaseTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long coCommentId;
     private String nickname;
@@ -31,7 +30,7 @@ public class CoComment extends BaseTime {
     @ManyToOne(fetch = FetchType.LAZY)
     private Feed feed;
 
-    public CoComment(CoCommentRequestDto commentRequestDto, Comment comment, User user) {
+    public ReplyComment(ReplyRequestDto commentRequestDto, Comment comment, User user) {
         this.coCommentId = commentRequestDto.getId();
         this.nickname = user.getNickname();
         this.comment = commentRequestDto.getComment();
@@ -40,15 +39,15 @@ public class CoComment extends BaseTime {
 
     }
 
-    public CoComment(Comment comment) {
+    public ReplyComment(Comment comment) {
         this.coCommentId = comment.getCommentId();
         this.nickname = comment.getNickname();
         this.comment = comment.getComment();
     }
 
-    public void update(CoCommentRequestDto coCommentRequestDto, CoComment coComment, User user) {
+    public void update(ReplyRequestDto replyRequestDto, ReplyComment replyComment, User user) {
         this.nickname = user.getNickname();
-        this.comment = coCommentRequestDto.getComment();
+        this.comment = replyRequestDto.getComment();
         this.user = user;
     }
 }

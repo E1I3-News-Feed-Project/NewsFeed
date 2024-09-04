@@ -1,6 +1,5 @@
 package com.nbacm.newsfeed.domain.comment.repository;
 
-import com.nbacm.newsfeed.domain.comment.entity.CoComment;
 import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import org.springframework.data.jpa.repository.JpaRepository;
