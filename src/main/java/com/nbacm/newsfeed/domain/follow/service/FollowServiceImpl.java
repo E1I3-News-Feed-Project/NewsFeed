@@ -4,11 +4,11 @@ import com.nbacm.newsfeed.domain.follow.dto.FollowRequestResponse;
 import com.nbacm.newsfeed.domain.follow.entity.Follow;
 import com.nbacm.newsfeed.domain.follow.entity.FollowRequest;
 import com.nbacm.newsfeed.domain.follow.entity.FollowRequestStatus;
+import com.nbacm.newsfeed.domain.follow.exception.*;
 import com.nbacm.newsfeed.domain.follow.repository.FollowRepository;
 import com.nbacm.newsfeed.domain.follow.repository.FollowRequestRepository;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +24,8 @@ public class FollowServiceImpl implements FollowService{
     @Transactional
     @Override
     public void deleteFollow(Long followingId, String email) {
-        User follower = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
-        User following = userRepository.findById(followingId).orElseThrow(RuntimeException::new);
+        User follower = userRepository.findByEmailOrElseThrow(email);
+        User following = userRepository.findByIdOrElseThrow(followingId);
 
         followRepository.deleteByFollowerUserIdAndFollowingUserId(follower.getUserId(), following.getUserId());
     }
@@ -33,19 +33,19 @@ public class FollowServiceImpl implements FollowService{
     @Transactional
     @Override
     public FollowRequestResponse sendFollowRequest(Long receiverId, String email) {
-        User sender = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
-        User receiver = userRepository.findById(receiverId).orElseThrow(RuntimeException::new);
+        User sender = userRepository.findByEmailOrElseThrow(email);
+        User receiver = userRepository.findByIdOrElseThrow(receiverId);
 
         if (sender.equals(receiver)) {
-            throw new RuntimeException("자신에게 팔로우 신청을 할 수 없습니다.");
+            throw new SelfFollowException();
         }
 
         if (followRepository.existsByFollowerUserIdAndFollowingUserId(sender.getUserId(), receiver.getUserId())) {
-            throw new RuntimeException("이미 팔로우가 되어있는 사용자입니다.");
+            throw new AlreadyFollowedException();
         }
 
         if (followRequestRepository.findBySenderUserIdAndReceiverUserIdAndStatus(sender.getUserId(), receiver.getUserId(), FollowRequestStatus.PENDING).isPresent()) {
-            throw new RuntimeException("이미 팔로우 신청을 한 사용자입니다.");
+            throw new DuplicateFollowRequestException();
         }
 
         FollowRequest followRequest = FollowRequest.builder()
@@ -64,7 +64,7 @@ public class FollowServiceImpl implements FollowService{
         FollowRequest followRequest = followRequestRepository.findById(requestId).orElseThrow(() -> new RuntimeException("팔로우 신청을 찾을 수 없습니다."));
 
         if (!followRequest.getReceiver().getUserId().equals(receiver.getUserId())) {
-            throw new RuntimeException("요청을 처리할 권한이 없습니다.");
+            throw new UnauthorizedFollowRequestException();
         }
 
         Follow follow = Follow.builder()
@@ -80,15 +80,16 @@ public class FollowServiceImpl implements FollowService{
     @Transactional
     @Override
     public FollowRequestResponse rejectFollowRequest(Long requestId, String email) {
-        User receiver = userRepository.findByEmail(email).orElseThrow(RuntimeException::new);
-        FollowRequest followRequest = followRequestRepository.findById(requestId).orElseThrow(() -> new RuntimeException("팔로우 신청을 찾을 수 없습니다."));
+        User receiver = userRepository.findByEmailOrElseThrow(email);
+        FollowRequest followRequest = followRequestRepository.findById(requestId).orElseThrow(FollowRequestNotFoundException::new);
 
         if (!followRequest.getReceiver().getUserId().equals(receiver.getUserId())) {
-            throw new RuntimeException("요청을 처리할 권한이 없습니다.");
+            throw new UnauthorizedFollowRequestException();
         }
 
         followRequest.reject();
 
         return FollowRequestResponse.from(followRequest);
     }
+
 }
