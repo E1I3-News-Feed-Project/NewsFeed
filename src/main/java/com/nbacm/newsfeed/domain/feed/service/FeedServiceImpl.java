@@ -6,7 +6,6 @@ import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.feed.entity.Image;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
 import com.nbacm.newsfeed.domain.feed.repository.ImageRepository;
-import com.nbacm.newsfeed.domain.follow.entity.Follow;
 import com.nbacm.newsfeed.domain.follow.repository.FollowRepository;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +89,7 @@ public class FeedServiceImpl implements FeedService {
         Page<Feed> feeds = feedRepository.findByUserEmailOrderByCreatedAtDesc(email, pageable);
         return feeds.getContent().stream()
                 .map(FeedResponseDto::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // 팔로우한 친구들의 게시글 조회
@@ -110,7 +108,7 @@ public class FeedServiceImpl implements FeedService {
         // 게시물 리스트를 DTO로 변환하여 반환합니다.
         return feeds.stream()
                 .map(FeedResponseDto::from)
-                .collect(Collectors.toList());
+                .toList();
     }
 
 

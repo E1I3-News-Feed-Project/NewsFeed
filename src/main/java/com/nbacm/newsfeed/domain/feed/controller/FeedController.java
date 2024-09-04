@@ -34,7 +34,7 @@ public class FeedController {
             HttpServletRequest request) {
 
         try {
-            String email = (String) request.getAttribute("AuthenticatedUser");
+            String email = request.getAttribute("AuthenticatedUser").toString();
             FeedRequestDto requestDto = new FeedRequestDto(content, images, email);
 
             feedService.createFeed(requestDto);
@@ -47,7 +47,7 @@ public class FeedController {
     @GetMapping("/{feedId}")
     public ResponseEntity<?> getFeedById(@PathVariable Long feedId, HttpServletRequest request) {
 
-        String email = (String) request.getAttribute("AuthenticatedUser");
+        String email = request.getAttribute("AuthenticatedUser").toString();
 
         Optional<FeedResponseDto> feedResponse = feedService.getFeedById(feedId, email);
 
@@ -62,7 +62,7 @@ public class FeedController {
             @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
 
-        String email = (String) request.getAttribute("AuthenticatedUser");
+        String email = request.getAttribute("AuthenticatedUser").toString();
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         List<FeedResponseDto> feeds = feedService.getAllFeeds(email, pageable);
@@ -72,7 +72,7 @@ public class FeedController {
 
     @GetMapping("/followedUsers")
     public ResponseEntity<List<FeedResponseDto>> getFeedsFromFollowedUsers(HttpServletRequest request) {
-        String email = (String) request.getAttribute("AuthenticatedUser");
+        String email = request.getAttribute("AuthenticatedUser").toString();
         List<FeedResponseDto> feeds = feedService.getFeedsFromFollowedUsers(email);
         return ResponseEntity.ok(feeds);
     }
@@ -85,7 +85,7 @@ public class FeedController {
             HttpServletRequest request) {
 
         try {
-            String email = (String) request.getAttribute("AuthenticatedUser");
+            String email = request.getAttribute("AuthenticatedUser").toString();
 
             // 이메일을 DTO에 설정
             FeedRequestDto dtoWithEmail = new FeedRequestDto(
@@ -109,7 +109,7 @@ public class FeedController {
     public ResponseEntity<String> deleteFeed(@PathVariable Long feedId, HttpServletRequest request) {
         try {
             // 인증된 사용자 이메일 추출
-            String email = (String) request.getAttribute("AuthenticatedUser");
+            String email = request.getAttribute("AuthenticatedUser").toString();
 
             // Feed 삭제 서비스 호출
             boolean deleted = feedService.deleteFeed(feedId, email);
