@@ -174,7 +174,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-user-profile-images
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,java,windows,macos
 
 ### Gradle ###
@@ -182,8 +181,7 @@ user-profile-images
 **/build/
 !src/**/build/
 
-*application.yml
-
+/upload/*
 # Ignore Gradle GUI config
 gradle-app.setting
 

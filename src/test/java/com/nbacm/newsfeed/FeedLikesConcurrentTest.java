@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-        "spring.data.redis.host=localhost",
+        "spring.data.redis.host=13.124.17.212",
         "spring.data.redis.port=6379"
 })
 public class FeedLikesConcurrentTest {

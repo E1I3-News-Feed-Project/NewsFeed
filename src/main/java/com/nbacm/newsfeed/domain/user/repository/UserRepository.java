@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);
+  Optional<User> findByNickname(String nickname);
 
   default User findByEmailOrElseThrow(String email) {
     return this.findByEmail(email).orElseThrow(() -> new NotMatchException("올바른 계정 접근이 아닙니다"));

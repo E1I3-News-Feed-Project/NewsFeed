@@ -5,7 +5,6 @@ import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.time.entity.BaseTime;
 import com.nbacm.newsfeed.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Getter
 @Setter
 @Table(name = "comment")
@@ -68,5 +67,8 @@ public class Comment extends BaseTime {
         if (this.replyCount > 0) {
             this.replyCount--;
         }
+    }
+
+    public void setNickname(String testUser) {
     }
 }

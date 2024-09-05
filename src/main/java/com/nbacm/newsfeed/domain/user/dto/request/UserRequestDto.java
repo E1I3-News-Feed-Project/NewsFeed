@@ -22,5 +22,9 @@ public class UserRequestDto {
     private MultipartFile profileImage;
 
 
-
+    public UserRequestDto(String email, String password, String nickname) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+    }
 }
