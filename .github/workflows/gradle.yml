@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ "user" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
