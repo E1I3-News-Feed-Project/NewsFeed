@@ -14,7 +14,7 @@ FROM openjdk:17.0-slim
 WORKDIR /app
 
 # 빌더 이미지에서 특정 jar 파일만 복사
-COPY --from=builder /build/build/libs/newsfeed-0.0.1-SNAPSHOT.jar ./app.jar
+COPY --from=builder /build/build/libs/newsfeed-0.0.1-SNAPSHOT.jar ./feed.jar
 
 EXPOSE 8080
 
@@ -25,5 +25,5 @@ ENTRYPOINT [                                                \
     "-jar",                                                 \
     "-Djava.security.egd=file:/dev/./urandom",              \
     "-Dsun.net.inetaddr.ttl=0",                             \
-    "app.jar"                                               \
+    "feed.jar"                                               \
 ]
