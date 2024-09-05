@@ -12,7 +12,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-
   data:
     redis:
       host: ${R_HOST}
