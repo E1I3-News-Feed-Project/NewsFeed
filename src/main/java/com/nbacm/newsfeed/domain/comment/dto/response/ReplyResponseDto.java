@@ -12,6 +12,6 @@ public class ReplyResponseDto {
     public ReplyResponseDto(ReplyComment replyComment) {
         this.id = replyComment.getCoCommentId();
         this.comment = replyComment.getComment();
-        this.nickname = replyComment.getNickname();
+        this.nickname = replyComment.getUser().getNickname();
     }
 }

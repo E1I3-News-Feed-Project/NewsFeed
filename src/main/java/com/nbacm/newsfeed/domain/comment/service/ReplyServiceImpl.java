@@ -41,10 +41,6 @@ public class ReplyServiceImpl implements ReplyService {
     public ReplyResponseDto updateReplyComments(Long commentId, String email, ReplyRequestDto replyRequestDto) {
         ReplyComment replyComment = replyRepository.findById(commentId).orElseThrow(() -> new NotFoundException("해당 댓글을 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다."));
-        if (!replyComment.getEmail().equals(email)) {
-            throw new IllegalArgumentException("삭제 할 권한이 없습니다.");
-
-        }
         replyComment.update(replyRequestDto, replyComment, user);
         ReplyComment savedReplyComment = replyRepository.save(replyComment);
         return new ReplyResponseDto(savedReplyComment);
@@ -61,11 +57,6 @@ public class ReplyServiceImpl implements ReplyService {
     public ReplyResponseDto deleteReply(Long cocommentId, String email) {
         ReplyComment replyComment = replyRepository.findById(cocommentId).orElseThrow(() -> new NotFoundException("댓글을 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다."));
-        System.out.println(replyComment.getEmail() + " " + user.getEmail());
-        if (!replyComment.getEmail().equals(email)) {
-            throw new UnauthorizedException("삭제 할 권한이 없습니다.");
-
-        }
         Comment parentComment = replyComment.getParentComment();
         parentComment.decrementReplyCount();
         commentRepository.save(parentComment);

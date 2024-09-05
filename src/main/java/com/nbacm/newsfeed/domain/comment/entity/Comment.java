@@ -24,10 +24,6 @@ public class Comment extends BaseTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId;
 
-//    @Column(name = "nickname", nullable = false)
-//    private String nickname;
-//    private String email;
-
     @ManyToOne(fetch = FetchType.LAZY)
     private Feed feed;
 
@@ -38,7 +34,6 @@ public class Comment extends BaseTime {
     private List<ReplyComment> replies = new ArrayList<>();
 
     private String comment;
-    private Long feedId;
     private int commentLikesCount;
     private int replyCount;
 
@@ -51,7 +46,7 @@ public class Comment extends BaseTime {
 
 
     public void updateComment(CommentRequestDto commentRequestDto, Feed feed, Comment comment, User user) {
-        this.feedId = feed.getFeedId();
+        this.feed = feed;
         this.commentId = comment.getCommentId();
         this.comment = commentRequestDto.getComment();
         this.user = user;

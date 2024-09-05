@@ -20,9 +20,7 @@ public class ReplyComment extends BaseTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long coCommentId;
 
-    private String nickname;
     private String comment;
-    private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
@@ -34,10 +32,9 @@ public class ReplyComment extends BaseTime {
 
     public ReplyComment(ReplyRequestDto commentRequestDto, Comment comment, User user) {
         this.coCommentId = commentRequestDto.getId();
-        this.nickname = user.getNickname();
         this.comment = commentRequestDto.getComment();
         this.parentComment = comment;
-        this.email = user.getEmail();
+        this.user = user;
 
     }
 
@@ -47,8 +44,6 @@ public class ReplyComment extends BaseTime {
     }
 
     public void update(ReplyRequestDto replyRequestDto, ReplyComment replyComment, User user) {
-        this.nickname = user.getNickname();
         this.comment = replyRequestDto.getComment();
-        this.user = user;
     }
 }
