@@ -103,7 +103,6 @@ fabric.properties
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -176,10 +175,7 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,java,windows,macos
 
-### Gradle ###
-.gradle
-**/build/
-!src/**/build/
+
 
 /upload/*
 # Ignore Gradle GUI config
