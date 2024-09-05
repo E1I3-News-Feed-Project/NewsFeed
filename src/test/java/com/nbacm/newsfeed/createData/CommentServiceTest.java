@@ -2,9 +2,7 @@ package com.nbacm.newsfeed.createData;
 
 import com.nbacm.newsfeed.domain.comment.dto.request.CommentRequestDto;
 import com.nbacm.newsfeed.domain.comment.dto.response.CommentResponseDto;
-import com.nbacm.newsfeed.domain.comment.entity.Comment;
 import com.nbacm.newsfeed.domain.comment.repository.CommentRepository;
-import com.nbacm.newsfeed.domain.comment.service.CommentService;
 import com.nbacm.newsfeed.domain.comment.service.CommentServiceImpl;
 import com.nbacm.newsfeed.domain.feed.entity.Feed;
 import com.nbacm.newsfeed.domain.feed.repository.FeedRepository;
@@ -39,10 +37,8 @@ public class CommentServiceTest {
 
         Pageable pageable = PageRequest.of(0, 100); // 한 번에 100개의 피드를 처리
         Page<Feed> feedPage;
-
         do {
             feedPage = feedRepository.findAll(pageable);
-
             for (Feed feed : feedPage.getContent()) {
                 int commentCount = random.nextInt(5) + 1; // 각 피드당 1~5개의 댓글 생성
 

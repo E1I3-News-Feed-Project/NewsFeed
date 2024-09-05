@@ -145,21 +145,6 @@ public class UserServiceImpl implements UserService {
         redisTemplate.delete("RT:" + user.getEmail());
     }
 
-    @Scheduled(cron = "0 0 001 * * ?") // 매일 새벽 1시에 실행
-    @Override
-    @Transactional
-    public void deleteOldAccounts() {
-        LocalDateTime tenDaysAgo = LocalDateTime.now().minusDays(1);
-
-        List<User> userToDelete = userRepository.findUsersDeletedBefore(tenDaysAgo);
-
-        List<Long> userIds = userToDelete.stream().map(User::getUserId).toList();
-
-        // 데이터베이스에서 사용자 삭제
-        userRepository.deleteByUserIdIn(userIds);
-
-    }
-
     @Override
     public String saveProfileImage(MultipartFile profileImage, String email) throws IOException {
         // 사용자별 디렉토리 경로 생성

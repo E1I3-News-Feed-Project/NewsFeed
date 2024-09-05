@@ -27,8 +27,6 @@ public interface UserService {
 
     void deleteAccount(String email, String password);
 
-    void deleteOldAccounts();
-
     MyPageUserResponseDto getUser(String email);
 
 }

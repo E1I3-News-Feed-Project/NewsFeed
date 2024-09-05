@@ -11,12 +11,15 @@ import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 
 @TestPropertySource(properties = {
-        "spring.data.redis.host=localhost",
+        "spring.data.redis.host=13.124.17.212",
         "spring.data.redis.port=6379"
 })
 public class CommentLikesServiceConcurrentUnlikeTest {
@@ -42,6 +45,9 @@ public class CommentLikesServiceConcurrentUnlikeTest {
 
     @Autowired
     private CommentLikesRepository commentLikesRepository;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     private Comment testComment;
     private List<User> testUsers;
@@ -100,9 +106,24 @@ public class CommentLikesServiceConcurrentUnlikeTest {
 
         latch.await(); // 모든 스레드가 작업을 마칠 때까지 대기
         service.shutdown();
+        printRedisKeys("테스트 후 Redis 키:");
 
+        cleanupRedisKeys();
 
+    }
+    private void printRedisKeys(String message) {
+        System.out.println(message);
+        Set<String> keys = redisTemplate.keys("*");
+        for (String key : keys) {
+            System.out.println(key + ": " + redisTemplate.opsForValue().get(key));
+        }
+    }
 
-
+    private void cleanupRedisKeys() {
+        Set<String> keys = redisTemplate.keys("*");
+        for (String key : keys) {
+            redisTemplate.delete(key);
+        }
+        System.out.println("모든 Redis 키가 삭제되었습니다.");
     }
 }
