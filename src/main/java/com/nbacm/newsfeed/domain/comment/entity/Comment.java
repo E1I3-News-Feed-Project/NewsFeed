@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Getter
 @Setter
 @Table(name = "comment")
@@ -38,7 +38,6 @@ public class Comment extends BaseTime {
     private List<ReplyComment> replies = new ArrayList<>();
 
     private String comment;
-    private Long feedId;
     private int commentLikesCount;
     private int replyCount;
 
@@ -51,7 +50,7 @@ public class Comment extends BaseTime {
 
 
     public void updateComment(CommentRequestDto commentRequestDto, Feed feed, Comment comment, User user) {
-        this.feedId = feed.getFeedId();
+        this.feed = feed;
         this.commentId = comment.getCommentId();
         this.comment = commentRequestDto.getComment();
         this.user = user;
@@ -73,5 +72,8 @@ public class Comment extends BaseTime {
         if (this.replyCount > 0) {
             this.replyCount--;
         }
+    }
+
+    public void setNickname(String testUser) {
     }
 }

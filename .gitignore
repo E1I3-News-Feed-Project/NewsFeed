@@ -183,7 +183,7 @@ user-profile-images
 !src/**/build/
 
 *application.yml
-
+upload
 # Ignore Gradle GUI config
 gradle-app.setting
 

@@ -7,4 +7,9 @@ public class CommentRequestDto {
     private Long id;
     private String comment;
     private String nickname;
+
+
+    public CommentRequestDto(String commentContent) {
+        this.comment = commentContent;
+    }
 }

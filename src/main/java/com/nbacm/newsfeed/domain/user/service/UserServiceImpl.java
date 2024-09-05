@@ -7,10 +7,7 @@ import com.nbacm.newsfeed.domain.user.dto.request.UserRequestDto;
 import com.nbacm.newsfeed.domain.user.dto.response.MyPageUserResponseDto;
 import com.nbacm.newsfeed.domain.user.dto.response.UserResponseDto;
 import com.nbacm.newsfeed.domain.user.entity.User;
-import com.nbacm.newsfeed.domain.user.exception.AlreadyDeletedException;
-import com.nbacm.newsfeed.domain.user.exception.EmailAlreadyExistsException;
-import com.nbacm.newsfeed.domain.user.exception.InvalidPasswordException;
-import com.nbacm.newsfeed.domain.user.exception.NotMatchException;
+import com.nbacm.newsfeed.domain.user.exception.*;
 import com.nbacm.newsfeed.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -48,10 +46,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto signup(UserRequestDto userRequestDto, MultipartFile profileImage) throws IOException {
-        String password = PasswordUtils.hashPassword(userRequestDto.getPassword());
 
         if (userRepository.findByEmail(userRequestDto.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("사용중인 이메일 입니다.");
+        }
+        if(userRepository.findByNickname(userRequestDto.getNickname()).isPresent()){
+            throw new NickNameAlreadyExistsException("사용중인 닉네임 입니다");
         }
         // 프로필 이미지가 있을 경우 먼저 저장하여 이미지 경로를 얻음
         String imagePath = null;
@@ -66,7 +66,6 @@ public class UserServiceImpl implements UserService {
                 .profileImage(imagePath) // 저장된 프로필 이미지 경로를 포함
                 .build();
 
-        // DB에 한 번의 insert 쿼리로 저장
         user = userRepository.save(user);
 
         return UserResponseDto.from(user);
@@ -163,7 +162,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String saveProfileImage(MultipartFile profileImage, String email) throws IOException {
-        // 사용자별 디렉토리 경로 생성 (ID 사용)
+        // 사용자별 디렉토리 경로 생성
         String userDirectory = baseDirectory + "/" + email;
         Path userPath = Paths.get(userDirectory);
 
@@ -172,9 +171,21 @@ public class UserServiceImpl implements UserService {
             Files.createDirectories(userPath);
         }
 
-        // 고유한 파일 이름 생성
-        String fileName = UUID.randomUUID() + "_" + StringUtils.cleanPath(Objects.requireNonNull(profileImage.getOriginalFilename()));
-        Path targetLocation = userPath.resolve(fileName);
+        // 파일 형식 검증 (예: JPG, JPEG, PNG만 허용)
+        String fileExtension = StringUtils.getFilenameExtension(profileImage.getOriginalFilename());
+        if (!Arrays.asList("jpg", "jpeg", "png").contains(fileExtension.toLowerCase())) {
+            throw new IOException("Invalid file type. Only JPG, JPEG, and PNG are allowed.");
+        }
+
+        // 파일 크기 제한 (5MB 이하로 제한)
+        long maxFileSize = 5 * 1024 * 1024;
+        if (profileImage.getSize() > maxFileSize) {
+            throw new IOException("File size exceeds the maximum limit of 5MB.");
+        }
+
+        // 원본 파일 이름을 사용하지 않고, 이메일 또는 다른 값을 기반으로 파일 이름 설정
+        String newFileName = email + "_profile_image_" + UUID.randomUUID() + "." + fileExtension;
+        Path targetLocation = userPath.resolve(newFileName);
 
         // 파일 저장
         Files.copy(profileImage.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
