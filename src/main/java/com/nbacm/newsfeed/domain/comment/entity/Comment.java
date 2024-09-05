@@ -24,10 +24,6 @@ public class Comment extends BaseTime {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId;
 
-//    @Column(name = "nickname", nullable = false)
-//    private String nickname;
-//    private String email;
-
     @ManyToOne(fetch = FetchType.LAZY)
     private Feed feed;
 
