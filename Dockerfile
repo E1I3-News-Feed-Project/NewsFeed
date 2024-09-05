@@ -10,7 +10,7 @@ COPY . /build
 RUN gradle build -x test --parallel
 
 # APP
-FROM openjdk:17.0.12-zulu
+FROM openjdk:17.0-slim
 WORKDIR /app
 
 # 빌더 이미지에서 jar 파일만 복사
