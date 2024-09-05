@@ -1,0 +1,5 @@
+spring:
+  data:
+    redis:
+      host: ${R_HOST}
+      port: ${R_PORT}
