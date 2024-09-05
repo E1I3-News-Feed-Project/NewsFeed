@@ -10,11 +10,11 @@ COPY . /build
 RUN gradle build -x test --parallel
 
 # APP
-FROM openjdk:17.0-slim
+FROM openjdk:17.0.12-zulu
 WORKDIR /app
 
-# 빌더 이미지에서 특정 jar 파일만 복사
-COPY --from=builder /build/build/libs/newsfeed-0.0.1-SNAPSHOT.jar ./feed.jar
+# 빌더 이미지에서 jar 파일만 복사
+COPY --from=builder /build/build/libs/*-SNAPSHOT.jar ./app.jar
 
 EXPOSE 8080
 
@@ -25,5 +25,5 @@ ENTRYPOINT [                                                \
     "-jar",                                                 \
     "-Djava.security.egd=file:/dev/./urandom",              \
     "-Dsun.net.inetaddr.ttl=0",                             \
-    "feed.jar"                                               \
+    "app.jar"              \
 ]
