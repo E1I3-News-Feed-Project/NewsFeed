@@ -21,11 +21,10 @@
 - JWT 토큰을 사용한 인증 시스템
 - Redis를 활용한 좋아요 동시성 처리 
 
-## 와이어프레 임
-![image](https://github.com/user-attachments/assets/bc896dd3-ed53-45b6-afd8-b818cec863a7),
-![image](https://github.com/user-attachments/assets/26dcc17b-21f6-49c7-b16e-e32586d188af)
+## 와이어프레임
+<img src="https://github.com/user-attachments/assets/bc896dd3-ed53-45b6-afd8-b818cec863a7" width="300" />
+<img src="https://github.com/user-attachments/assets/26dcc17b-21f6-49c7-b16e-e32586d188af" width="300" />
 
 ## ERD
-![image](https://github.com/user-attachments/assets/f23a36b7-0254-4733-9085-d9a7d0d3f1da)
-
+<img src="https://github.com/user-attachments/assets/79ef908a-50fe-481d-b812-3c60bf673e34" width="300" />
 
