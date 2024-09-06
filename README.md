@@ -28,3 +28,6 @@
 ## ERD
 <img src="https://github.com/user-attachments/assets/79ef908a-50fe-481d-b812-3c60bf673e34" width="300" />
 
+## API 명세서
+https://documenter.getpostman.com/view/37565019/2sA3s7j9XQ
+
